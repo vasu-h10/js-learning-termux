@@ -1,11 +1,11 @@
 # JavaScript Learning Playground
 
-A personal JavaScript learning and practice project built using
+A personal JavaScript learning and practice project built using  
 **Termux** and **Node.js** on Android.
 
 This repository contains:
 - A mobile-friendly JavaScript playground
-- Code editor with console output
+- Code editor with built-in console output
 - Practice snippets and experiments
 - Learning-focused implementations using vanilla JavaScript
 
@@ -18,4 +18,4 @@ This repository contains:
 ## Purpose
 This project is used as:
 - A personal JavaScript learning environment
-- A portfolio project to demonstrate JS fundamentals
+- A portfolio project to demonstrate JavaScript fundamentals
