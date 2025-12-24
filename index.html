@@ -1,280 +1,290 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>JS Playground</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JS Playground</title>
 
-  <style>
-    :root {
-      --bg: #020617;
-      --panel: #020617;
-      --text: #e5e7eb;
-      --editor: #020617;
-      --code: #22c55e;
-      --accent: #2563eb;
-    }
+<style>
+:root {
+  --bg: #020617;
+  --panel: #020617;
+  --text: #e5e7eb;
+  --editor: #020617;
+  --code: #22c55e;
+  --accent: #2563eb;
 
-    body.light {
-      --bg: #f8fafc;
-      --panel: #ffffff;
-      --text: #0f172a;
-      --editor: #f1f5f9;
-      --code: #0f172a;
-      --accent: #2563eb;
-    }
+  --font: 17px;
+}
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+body.light {
+  --bg: #f8fafc;
+  --panel: #ffffff;
+  --text: #0f172a;
+  --editor: #f1f5f9;
+  --code: #0f172a;
+}
 
-    body {
-      min-height: 100vh;
-      background: var(--bg);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: monospace;
-      color: var(--text);
-      padding: 16px;
-    }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-    .app {
-      width: 100%;
-      max-width: 900px;
-      background: var(--panel);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 25px 50px rgba(0,0,0,0.6);
-    }
+body {
+  height: 100dvh;
+  background: var(--bg);
+  font-family: monospace;
+  color: var(--text);
+}
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 6px;
+  gap: 6px;
+}
 
-    h1 {
-      font-size: 20px;
-      color: var(--accent);
-    }
+/* ===== HEADER ===== */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-    header button {
-      padding: 6px 10px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      background: var(--accent);
-      color: white;
-    }
+h1 {
+  font-size: 16px;
+  color: var(--accent);
+}
 
-    .tabs {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 6px;
-    }
+header button {
+  padding: 6px 10px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: white;
+}
 
-    .tab {
-      padding: 6px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      background: #334155;
-      color: white;
-      font-size: 14px;
-    }
+/* ===== TABS ===== */
+.tabs {
+  display: flex;
+  gap: 6px;
+}
 
-    .tab.active {
-      background: var(--accent);
-    }
+.tab {
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #334155;
+  font-size: 14px;
+}
 
-    .editor-wrapper {
-      display: flex;
-      border: 1px solid #334155;
-      border-radius: 10px;
-      overflow: hidden;
-    }
+.tab.active {
+  background: var(--accent);
+}
 
-    /* ===== LINE NUMBERS ===== */
-    .lines {
-      padding: 12px 6px;
-      text-align: right;
-      color: #64748b;
-      user-select: none;
-      font-size: 15px;
-      line-height: 1.6;
-      overflow: hidden;
-      align-self: flex-start;
-    }
+/* ===== EDITOR ===== */
+.editor-wrapper {
+  flex: 1;
+  display: flex;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  overflow: hidden;
+}
 
-    .lines div {
-      height: calc(1.6em);
-    }
+.lines {
+  padding: 10px 6px;
+  text-align: right;
+  color: #64748b;
+  font-size: var(--font);
+  line-height: 1.6;
+  user-select: none;
+  overflow: hidden;
+  align-self: flex-start;
+}
 
-    /* ===== EDITOR ===== */
-    textarea {
-      flex: 1;
-      height: 260px;
-      background: var(--editor);
-      color: var(--code);
-      border: none;
-      padding: 12px;
-      font-size: 15px;
-      line-height: 1.6;
-      resize: none;
-      outline: none;
-      font-family: monospace;
-      overflow-y: auto;
-    }
+.lines div {
+  height: calc(1.6em);
+}
 
-    .buttons {
-      display: flex;
-      gap: 8px;
-      margin: 12px 0;
-    }
+textarea {
+  flex: 1;
+  min-height: 0;
+  background: var(--editor);
+  color: var(--code);
+  border: none;
+  padding: 10px;
+  font-size: var(--font);
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  overflow-y: auto;
+}
 
-    .buttons button {
-      flex: 1;
-      padding: 12px;
-      font-size: 16px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-    }
+/* ===== BUTTON BAR ===== */
+.buttons {
+  display: flex;
+  gap: 6px;
+}
 
-    .console {
-      background: black;
-      padding: 12px;
-      border-radius: 10px;
-      height: 220px;
-      overflow-y: auto;
-      font-size: 14px;
-    }
+.buttons button {
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: white;
+}
 
-    .log { color: var(--text); }
-    .error { color: #ef4444; }
-  </style>
+/* ===== CONSOLE ===== */
+.console {
+  height: 26dvh;
+  background: black;
+  border-radius: 10px;
+  padding: 8px;
+  font-size: calc(var(--font) - 2px);
+  overflow-y: auto;
+}
+
+.console.hidden {
+  display: none;
+}
+
+.log { color: var(--text); }
+.error { color: #ef4444; }
+
+/* ===== FULLSCREEN ===== */
+.fullscreen .editor-wrapper {
+  flex: 1;
+}
+
+.fullscreen .console,
+.fullscreen .tabs,
+.fullscreen .buttons {
+  display: none;
+}
+</style>
 </head>
 
 <body>
-<div class="app">
+<div class="app" id="app">
 
-  <header>
-    <h1>JS Playground</h1>
-    <button onclick="toggleTheme()">🌙 / ☀️</button>
-  </header>
+<header>
+  <h1>JS Playground</h1>
+  <button onclick="toggleTheme()">☀️ / 🌙</button>
+</header>
 
-  <div class="tabs">
-    <div class="tab active" onclick="switchFile(0)">main.js</div>
-    <div class="tab" onclick="switchFile(1)">test.js</div>
-  </div>
+<div class="tabs">
+  <div class="tab active" onclick="switchFile(0)">main.js</div>
+  <div class="tab" onclick="switchFile(1)">test.js</div>
+</div>
 
-  <div class="editor-wrapper">
-    <div id="lines" class="lines"></div>
-    <textarea id="editor"></textarea>
-  </div>
+<div class="editor-wrapper">
+  <div id="lines" class="lines"></div>
+  <textarea id="editor"></textarea>
+</div>
 
-  <div class="buttons">
-    <button onclick="runCode()">▶ Run</button>
-    <button onclick="clearConsole()">🧹 Clear</button>
-    <button onclick="download()">⬇ Export</button>
-  </div>
+<div class="buttons">
+  <button onclick="runCode()">▶ Run</button>
+  <button onclick="toggleConsole()">🖥 Console</button>
+  <button onclick="toggleFullscreen()">⛶ Full</button>
+  <button onclick="fontMinus()">A−</button>
+  <button onclick="fontPlus()">A+</button>
+</div>
 
-  <div id="console" class="console"></div>
+<div id="console" class="console"></div>
 
 </div>
 
 <script>
-  const editor = document.getElementById("editor");
-  const consoleBox = document.getElementById("console");
-  const lines = document.getElementById("lines");
-  const tabs = document.querySelectorAll(".tab");
+const editor = document.getElementById("editor");
+const consoleBox = document.getElementById("console");
+const lines = document.getElementById("lines");
+const tabs = document.querySelectorAll(".tab");
+const app = document.getElementById("app");
 
-  let files = [
-    localStorage.getItem("file0") || "let x = 10;\nlet y = 5;\nconsole.log(x + y);",
-    localStorage.getItem("file1") || "console.log('Hello from test.js');"
-  ];
+let font = 17;
 
-  let current = 0;
+let files = [
+  localStorage.getItem("file0") || "let x = 10;\nlet y = 5;\nconsole.log(x + y);",
+  localStorage.getItem("file1") || "console.log('Hello from test.js');"
+];
 
-  function updateLines() {
-    const count = editor.value.split("\n").length;
-    lines.innerHTML = "";
+let current = 0;
 
-    for (let i = 1; i <= count; i++) {
-      const div = document.createElement("div");
-      div.textContent = i;
-      lines.appendChild(div);
-    }
-
-    /* clamp line numbers to content height */
-    lines.style.height = editor.scrollHeight + "px";
+function updateLines() {
+  const count = editor.value.split("\n").length;
+  lines.innerHTML = "";
+  for (let i = 1; i <= count; i++) {
+    const d = document.createElement("div");
+    d.textContent = i;
+    lines.appendChild(d);
   }
+  lines.style.height =
+    Math.min(editor.scrollHeight, editor.clientHeight) + "px";
+}
 
-  function switchFile(i) {
-    files[current] = editor.value;
-    localStorage.setItem("file" + current, files[current]);
-    current = i;
-    editor.value = files[i];
-    tabs.forEach(t => t.classList.remove("active"));
-    tabs[i].classList.add("active");
-    updateLines();
-  }
-
-  editor.value = files[0];
+function switchFile(i) {
+  files[current] = editor.value;
+  localStorage.setItem("file" + current, files[current]);
+  current = i;
+  editor.value = files[i];
+  tabs.forEach(t => t.classList.remove("active"));
+  tabs[i].classList.add("active");
   updateLines();
+}
 
-  editor.addEventListener("input", () => {
-    updateLines();
-    localStorage.setItem("file" + current, editor.value);
-  });
+editor.value = files[0];
+updateLines();
 
-  editor.addEventListener("scroll", () => {
-    lines.scrollTop = editor.scrollTop;
-  });
+editor.addEventListener("input", () => {
+  updateLines();
+  localStorage.setItem("file" + current, editor.value);
+});
 
-  const originalLog = console.log;
-  console.log = (...args) => {
-    originalLog(...args);
-    consoleBox.innerHTML += `<div class="log">&gt; ${args.join(" ")}</div>`;
-  };
+editor.addEventListener("scroll", () => {
+  lines.scrollTop = editor.scrollTop;
+});
 
-  function clearConsole() {
-    consoleBox.innerHTML = "";
-  }
+console.log = (...args) => {
+  consoleBox.innerHTML += `<div class="log">&gt; ${args.join(" ")}</div>`;
+};
 
-  function runCode() {
-    clearConsole();
-    try {
-      const result = eval(editor.value);
-      if (result !== undefined) {
-        consoleBox.innerHTML += `<div class="log">&gt; ${result}</div>`;
-      }
-    } catch (e) {
-      consoleBox.innerHTML += `<div class="error">Error: ${e.message}</div>`;
+function runCode() {
+  consoleBox.innerHTML = "";
+  try {
+    const result = eval(editor.value);
+    if (result !== undefined) {
+      consoleBox.innerHTML += `<div class="log">&gt; ${result}</div>`;
     }
+  } catch (e) {
+    consoleBox.innerHTML += `<div class="error">${e.message}</div>`;
   }
+}
 
-  document.addEventListener("keydown", e => {
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-      runCode();
-    }
-  });
+function toggleTheme() {
+  document.body.classList.toggle("light");
+}
 
-  function toggleTheme() {
-    document.body.classList.toggle("light");
-  }
+function toggleConsole() {
+  consoleBox.classList.toggle("hidden");
+}
 
-  function download() {
-    const blob = new Blob([editor.value], { type: "text/javascript" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = tabs[current].innerText;
-    a.click();
-  }
+function toggleFullscreen() {
+  app.classList.toggle("fullscreen");
+}
+
+function fontPlus() {
+  font += 1;
+  document.documentElement.style.setProperty("--font", font + "px");
+}
+
+function fontMinus() {
+  font = Math.max(12, font - 1);
+  document.documentElement.style.setProperty("--font", font + "px");
+}
 </script>
 </body>
 </html>
