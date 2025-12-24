@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JS Playground</title>
 
   <style>
@@ -33,70 +32,71 @@
     body {
       min-height: 100vh;
       background: var(--bg);
-      font-family: system-ui, monospace;
-      color: var(--text);
       display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: monospace;
+      color: var(--text);
+      padding: 16px;
     }
 
-    /* ===== APP CONTAINER ===== */
     .app {
-      display: flex;
-      flex-direction: column;
       width: 100%;
       max-width: 900px;
-      margin: auto;
-      padding: 12px;
-      gap: 8px; /* 🔑 controls vertical spacing */
+      background: var(--panel);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.6);
     }
 
-    /* ===== HEADER ===== */
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 10px;
     }
 
     h1 {
-      font-size: 22px;
+      font-size: 20px;
       color: var(--accent);
     }
 
     header button {
-      padding: 8px 12px;
-      font-size: 16px;
-      border-radius: 10px;
+      padding: 6px 10px;
+      border-radius: 8px;
       border: none;
       cursor: pointer;
       background: var(--accent);
       color: white;
     }
 
-    /* ===== TABS ===== */
     .tabs {
       display: flex;
       gap: 6px;
+      margin-bottom: 6px;
     }
 
     .tab {
-      padding: 8px 12px;
-      border-radius: 8px;
+      padding: 6px 10px;
+      border-radius: 6px;
       cursor: pointer;
       background: #334155;
-      font-size: 15px;
+      color: white;
+      font-size: 14px;
     }
 
     .tab.active {
       background: var(--accent);
     }
 
-    /* ===== EDITOR ===== */
     .editor-wrapper {
       display: flex;
       border: 1px solid #334155;
-      border-radius: 12px;
+      border-radius: 10px;
       overflow: hidden;
     }
 
+    /* ===== LINE NUMBERS ===== */
     .lines {
       padding: 12px 6px;
       text-align: right;
@@ -104,50 +104,54 @@
       user-select: none;
       font-size: 15px;
       line-height: 1.6;
+      overflow: hidden;
+      align-self: flex-start;
     }
 
+    .lines div {
+      height: calc(1.6em);
+    }
+
+    /* ===== EDITOR ===== */
     textarea {
       flex: 1;
-      height: 42vh;              /* BIG editor */
+      height: 260px;
       background: var(--editor);
       color: var(--code);
       border: none;
-      padding: 14px;
-      font-size: 18px;           /* BIG text */
+      padding: 12px;
+      font-size: 15px;
       line-height: 1.6;
       resize: none;
       outline: none;
       font-family: monospace;
+      overflow-y: auto;
     }
 
-    /* ===== BUTTONS ===== */
     .buttons {
       display: flex;
       gap: 8px;
+      margin: 12px 0;
     }
 
     .buttons button {
       flex: 1;
-      padding: 14px;
-      font-size: 18px;
-      font-weight: 600;
+      padding: 12px;
+      font-size: 16px;
       background: var(--accent);
       color: white;
       border: none;
-      border-radius: 12px;
+      border-radius: 10px;
       cursor: pointer;
     }
 
-    /* ===== CONSOLE ===== */
     .console {
-      background: #000;
-      border-radius: 12px;
+      background: black;
       padding: 12px;
-      height: 26vh;
+      border-radius: 10px;
+      height: 220px;
       overflow-y: auto;
-      font-size: 16px;
-      line-height: 1.5;
-      font-family: monospace;
+      font-size: 14px;
     }
 
     .log { color: var(--text); }
@@ -156,32 +160,32 @@
 </head>
 
 <body>
-  <div class="app">
+<div class="app">
 
-    <header>
-      <h1>JS Playground</h1>
-      <button onclick="toggleTheme()">🌙 / ☀️</button>
-    </header>
+  <header>
+    <h1>JS Playground</h1>
+    <button onclick="toggleTheme()">🌙 / ☀️</button>
+  </header>
 
-    <div class="tabs">
-      <div class="tab active" onclick="switchFile(0)">main.js</div>
-      <div class="tab" onclick="switchFile(1)">test.js</div>
-    </div>
-
-    <div class="editor-wrapper">
-      <div id="lines" class="lines">1</div>
-      <textarea id="editor"></textarea>
-    </div>
-
-    <div class="buttons">
-      <button onclick="runCode()">▶ Run</button>
-      <button onclick="clearConsole()">🧹 Clear</button>
-      <button onclick="download()">⬇ Export</button>
-    </div>
-
-    <div id="console" class="console"></div>
-
+  <div class="tabs">
+    <div class="tab active" onclick="switchFile(0)">main.js</div>
+    <div class="tab" onclick="switchFile(1)">test.js</div>
   </div>
+
+  <div class="editor-wrapper">
+    <div id="lines" class="lines"></div>
+    <textarea id="editor"></textarea>
+  </div>
+
+  <div class="buttons">
+    <button onclick="runCode()">▶ Run</button>
+    <button onclick="clearConsole()">🧹 Clear</button>
+    <button onclick="download()">⬇ Export</button>
+  </div>
+
+  <div id="console" class="console"></div>
+
+</div>
 
 <script>
   const editor = document.getElementById("editor");
@@ -197,10 +201,17 @@
   let current = 0;
 
   function updateLines() {
-    lines.innerHTML = Array.from(
-      { length: editor.value.split("\n").length },
-      (_, i) => i + 1
-    ).join("<br>");
+    const count = editor.value.split("\n").length;
+    lines.innerHTML = "";
+
+    for (let i = 1; i <= count; i++) {
+      const div = document.createElement("div");
+      div.textContent = i;
+      lines.appendChild(div);
+    }
+
+    /* clamp line numbers to content height */
+    lines.style.height = editor.scrollHeight + "px";
   }
 
   function switchFile(i) {
@@ -219,6 +230,10 @@
   editor.addEventListener("input", () => {
     updateLines();
     localStorage.setItem("file" + current, editor.value);
+  });
+
+  editor.addEventListener("scroll", () => {
+    lines.scrollTop = editor.scrollTop;
   });
 
   const originalLog = console.log;
