@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JS Playground</title>
 
   <style>
@@ -23,75 +24,76 @@
       --accent: #2563eb;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
-      margin: 0;
       min-height: 100vh;
       background: var(--bg);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: monospace;
+      font-family: system-ui, monospace;
       color: var(--text);
-      padding: 16px;
+      display: flex;
     }
 
+    /* ===== APP CONTAINER ===== */
     .app {
+      display: flex;
+      flex-direction: column;
       width: 100%;
       max-width: 900px;
-      background: var(--panel);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+      margin: auto;
+      padding: 12px;
+      gap: 8px; /* 🔑 controls vertical spacing */
     }
 
+    /* ===== HEADER ===== */
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
     }
 
     h1 {
-      font-size: 20px;
+      font-size: 22px;
       color: var(--accent);
-      margin: 0;
     }
 
     header button {
-      padding: 6px 10px;
-      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 16px;
+      border-radius: 10px;
       border: none;
       cursor: pointer;
       background: var(--accent);
       color: white;
     }
 
-    /* Tabs */
+    /* ===== TABS ===== */
     .tabs {
       display: flex;
       gap: 6px;
-      margin-bottom: 6px;
     }
 
     .tab {
-      padding: 6px 10px;
-      border-radius: 6px;
+      padding: 8px 12px;
+      border-radius: 8px;
       cursor: pointer;
       background: #334155;
-      color: white;
-      font-size: 14px;
+      font-size: 15px;
     }
 
     .tab.active {
       background: var(--accent);
     }
 
+    /* ===== EDITOR ===== */
     .editor-wrapper {
       display: flex;
       border: 1px solid #334155;
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
     }
 
@@ -100,47 +102,52 @@
       text-align: right;
       color: #64748b;
       user-select: none;
-      font-size: 14px;
+      font-size: 15px;
       line-height: 1.6;
     }
 
     textarea {
       flex: 1;
-      height: 260px;
+      height: 42vh;              /* BIG editor */
       background: var(--editor);
       color: var(--code);
       border: none;
-      padding: 12px;
-      font-size: 15px;
+      padding: 14px;
+      font-size: 18px;           /* BIG text */
       line-height: 1.6;
       resize: none;
       outline: none;
+      font-family: monospace;
     }
 
+    /* ===== BUTTONS ===== */
     .buttons {
       display: flex;
       gap: 8px;
-      margin: 12px 0;
     }
 
     .buttons button {
       flex: 1;
-      padding: 12px;
-      font-size: 16px;
+      padding: 14px;
+      font-size: 18px;
+      font-weight: 600;
       background: var(--accent);
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
     }
 
+    /* ===== CONSOLE ===== */
     .console {
-      background: black;
+      background: #000;
+      border-radius: 12px;
       padding: 12px;
-      border-radius: 10px;
-      height: 220px;
+      height: 26vh;
       overflow-y: auto;
-      font-size: 14px;
+      font-size: 16px;
+      line-height: 1.5;
+      font-family: monospace;
     }
 
     .log { color: var(--text); }
@@ -150,6 +157,7 @@
 
 <body>
   <div class="app">
+
     <header>
       <h1>JS Playground</h1>
       <button onclick="toggleTheme()">🌙 / ☀️</button>
@@ -172,6 +180,7 @@
     </div>
 
     <div id="console" class="console"></div>
+
   </div>
 
 <script>
@@ -197,7 +206,6 @@
   function switchFile(i) {
     files[current] = editor.value;
     localStorage.setItem("file" + current, files[current]);
-
     current = i;
     editor.value = files[i];
     tabs.forEach(t => t.classList.remove("active"));
