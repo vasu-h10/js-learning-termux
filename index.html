@@ -3,13 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Playground v9 — HTML / CSS / JS Learning</title>
+<title>Playground v11 — Beginner Mode</title>
 
 <!-- CodeMirror Syntax Highlight -->
-<link rel="stylesheet"
- href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
-<link rel="stylesheet"
- href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
@@ -18,7 +16,7 @@
 <style>
 :root {
   --bg:#020617; --panel:#020617; --text:#e5e7eb;
-  --accent:#2563eb; --console-bg:#000;
+  --editor-bg:#0f172a; --accent:#2563eb; --console-bg:#000;
 }
 body {
   margin:0; background:var(--bg); color:var(--text);
@@ -29,8 +27,6 @@ body {
   width:100%; max-width:900px; background:var(--panel);
   border-radius:12px; padding:12px;
 }
-
-/* --- FILE TABS --- */
 .file-tabs {
   display:flex; gap:6px; overflow-x:auto; margin-bottom:8px;
 }
@@ -40,125 +36,182 @@ body {
 }
 .file-btn.active { background:var(--accent); }
 
-/* --- BUTTONS --- */
+#editorControls { display:flex; gap:6px; margin:6px 0; }
+#editorControls input {
+  width:60%; padding:6px; border-radius:6px; border:none;
+}
+
 .buttons { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
 button {
   flex:1; padding:10px; border:none; border-radius:8px;
   background:var(--accent); color:white; cursor:pointer;
 }
 
-/* --- PANELS --- */
 .panel-tabs { display:flex; gap:6px; margin-top:10px; }
 .panel-btn {
   padding:6px 10px; background:#334155; border-radius:6px;
   cursor:pointer; flex-shrink:0;
 }
 .panel-btn.active { background:var(--accent); }
+
 .panel {
   margin-top:8px; background:var(--console-bg);
-  padding:12px; border-radius:10px; height:220px;
-  overflow-y:auto; font-size:14px; display:none;
+  padding:12px; border-radius:10px; height:200px;
+  overflow-y:auto; font-size:14px;
+  display:none;
 }
 .panel.active { display:block; }
-.error { color:red; }
-.log   { color:white; }
 
-/* --- FULL PREVIEW --- */
+.error{color:red;} .log{color:white;}
+
 #previewArea {
   display:none; position:fixed; top:0; left:0;
   width:100vw; height:100vh; background:white; z-index:9999;
 }
 #previewFrame {
-  width:100vw; height:calc(100vh - 50px); border:none;
+  width:100%; height:calc(100vh - 50px); border:none;
 }
 </style>
 </head>
 
 <body>
 <div class="app" id="editorArea">
-  <h2>Playground v9 — HTML / CSS / JS</h2>
+  <h2>Playground v11 — HTML / CSS / JS Learning</h2>
 
-  <!-- FILE SELECT -->
-  <div class="file-tabs">
-    <div class="file-btn active" onclick="switchFile('html')">index.html</div>
-    <div class="file-btn" onclick="switchFile('css')">style.css</div>
-    <div class="file-btn" onclick="switchFile('js')">script.js</div>
+  <!-- file tabs -->
+  <div class="file-tabs" id="fileTabs"></div>
+
+  <!-- file actions -->
+  <div id="editorControls">
+    <input id="fileNameInput" placeholder="newfile.js / style.css / index.html"/>
+    <button onclick="createFile()">➕ Create</button>
+    <button onclick="renameFile()">✏ Rename</button>
+    <button onclick="deleteFile()">🗑 Delete</button>
   </div>
 
-  <!-- EDITOR -->
+  <!-- editor -->
   <textarea id="editor"></textarea>
 
-  <!-- ACTION BUTTONS -->
+  <!-- buttons -->
   <div class="buttons">
-    <button onclick="showPreview()">🌍 Preview</button>
-    <button onclick="showPreviewFull()">🌐 Preview Full</button>
     <button onclick="runJS()">▶ Run JS</button>
+    <button onclick="showPreviewFull()">🌐 Preview Full</button>
     <button onclick="showConsoleFull()">🖥 Console Full</button>
   </div>
 
-  <!-- PANEL TABS -->
+  <!-- panels -->
   <div class="panel-tabs">
     <div class="panel-btn active" onclick="showPanel('htmlPanel')">HTML validator</div>
     <div class="panel-btn" onclick="showPanel('cssPanel')">CSS validator</div>
     <div class="panel-btn" onclick="showPanel('jsPanel')">JS console</div>
   </div>
 
-  <!-- OUTPUT PANELS -->
   <div id="htmlPanel" class="panel active"></div>
   <div id="cssPanel" class="panel"></div>
   <div id="jsPanel" class="panel"></div>
 </div>
 
-<!-- FULL PREVIEW -->
+<!-- fullscreen preview -->
 <div id="previewArea">
   <button onclick="hidePreview()" style="width:100%;">🔙 Back</button>
   <iframe id="previewFrame"></iframe>
 </div>
 
-<!-- FULLSCREEN CONSOLE -->
+<!-- fullscreen console -->
 <div id="consoleFull"
  style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:black;color:white;z-index:9999;">
-  <button onclick="this.parentElement.style.display='none'">🔙 Back</button>
+  <button onclick="hideConsoleFull()">🔙 Back</button>
   <pre id="consoleFullContent"></pre>
 </div>
 
 <script>
 /* ---------- storage ---------- */
-let files = {
-  html: localStorage.getItem("html") || "<h1>Hello!</h1>",
-  css: localStorage.getItem("css") || "body{background:white;}",
-  js: localStorage.getItem("js") || "console.log('JS OK');"
-};
+let files = JSON.parse(localStorage.getItem("files") || "{}");
 
-let ext = "html";
+/* default starter files */
+if(Object.keys(files).length === 0){
+  files = {
+    "index.html":"<h1>Hello!</h1>",
+    "style.css":"body{background:white;}",
+    "script.js":"console.log('JS OK');"
+  };
+}
+
+function saveFiles(){ localStorage.setItem("files", JSON.stringify(files)); }
+
+/* ---------- editor+syntax ---------- */
+let currentFile = Object.keys(files)[0];
 let cmEditor;
 
-/* ---------- editor setup ---------- */
 function setupEditor(){
-  cmEditor = CodeMirror.fromTextArea(
-    document.getElementById("editor"),
-    { mode:"xml", theme:"dracula", lineNumbers:true }
-  );
-  cmEditor.setValue(files[ext]);
+  cmEditor = CodeMirror.fromTextArea(document.getElementById("editor"),{
+    mode:getMode(currentFile), theme:"dracula",
+    lineNumbers:true
+  });
+  cmEditor.setValue(files[currentFile]);
   cmEditor.on("change",()=>{
-    files[ext]=cmEditor.getValue();
-    localStorage.setItem(ext, files[ext]);
+    files[currentFile] = cmEditor.getValue();
+    saveFiles();
   });
 }
 setupEditor();
 
+/* ---------- tabs display ---------- */
+function refreshTabs(){
+  const t=document.getElementById("fileTabs");
+  t.innerHTML="";
+  Object.keys(files).forEach(name=>{
+    t.innerHTML+=`<div class="file-btn ${name===currentFile?"active":""}"
+      onclick="switchFile('${name}')">${name}</div>`;
+  });
+}
+refreshTabs();
+
 /* ---------- switching files ---------- */
-function switchFile(type){
-  files[ext] = cmEditor.getValue();
-  ext = type;
+function switchFile(name){
+  files[currentFile] = cmEditor.getValue();
+  currentFile=name;
+  cmEditor.setOption("mode", getMode(name));
+  cmEditor.setValue(files[name]);
+  refreshTabs();
+}
 
-  const mode = ext==="js"?"javascript":ext==="css"?"css":"xml";
-  cmEditor.setOption("mode",mode);
-  cmEditor.setValue(files[ext]);
+function getMode(name){
+  if(name.endsWith(".js")) return "javascript";
+  if(name.endsWith(".css")) return "css";
+  return "xml";
+}
 
-  document.querySelectorAll(".file-btn").forEach(b=>b.classList.remove("active"));
-  [...document.querySelectorAll(".file-btn")]
-    .find(b=>b.innerText.includes(ext)).classList.add("active");
+/* ---------- file operations ---------- */
+function createFile(){
+  const name=document.getElementById("fileNameInput").value.trim();
+  if(!name || files[name]) return alert("Invalid or exists");
+  if(!name.endsWith(".js") && !name.endsWith(".css") && !name.endsWith(".html"))
+    return alert("Only .html .css .js allowed");
+  files[name]="";
+  saveFiles(); refreshTabs();
+}
+
+function renameFile(){
+  const name=document.getElementById("fileNameInput").value.trim();
+  if(!name || files[name]) return alert("Invalid or exists");
+  files[name]=files[currentFile];
+  delete files[currentFile];
+  currentFile=name; saveFiles();
+  cmEditor.setOption("mode",getMode(name));
+  cmEditor.setValue(files[name]);
+  refreshTabs();
+}
+
+function deleteFile(){
+  if(confirm("Delete "+currentFile+"?")){
+    delete files[currentFile];
+    currentFile=Object.keys(files)[0];
+    saveFiles();
+    cmEditor.setOption("mode",getMode(currentFile));
+    cmEditor.setValue(files[currentFile]);
+    refreshTabs();
+  }
 }
 
 /* ---------- panels ---------- */
@@ -167,9 +220,7 @@ function showPanel(id){
   document.getElementById(id).classList.add("active");
 
   document.querySelectorAll(".panel-btn").forEach(b=>b.classList.remove("active"));
-  let match = id.includes("html")?"HTML": id.includes("css")?"CSS":"JS";
-  [...document.querySelectorAll(".panel-btn")]
-    .find(b=>b.innerText.toUpperCase().includes(match)).classList.add("active");
+  [...document.querySelectorAll(".panel-btn")].find(b=>b.innerText.toLowerCase().includes(id.substring(0,2))).classList.add("active");
 }
 
 /* ---------- validators ---------- */
@@ -177,77 +228,58 @@ function validateHTML(){
   const p=document.getElementById("htmlPanel");
   p.innerHTML="";
   const parser=new DOMParser();
-  const doc=parser.parseFromString(files.html,"text/html");
-  doc.querySelectorAll("parsererror").forEach(e=>{
-    p.innerHTML+=`<div class="error">${e.textContent}</div>`;
-  });
+  const doc=parser.parseFromString(files[currentFile],"text/html");
+  let errors=doc.querySelectorAll("parsererror");
+  errors.forEach(e=>p.innerHTML+=`<div class="error">${e.textContent}</div>`);
 }
+
 function validateCSS(){
   const p=document.getElementById("cssPanel");
   p.innerHTML="";
-  try{ new CSSStyleSheet().replaceSync(files.css); }
-  catch(e){ p.innerHTML+=`<div class="error">${e.message}</div>`; }
+  try{ new CSSStyleSheet().replaceSync(files[currentFile]); }
+  catch(e){ p.innerHTML=`<div class="error">${e.message}</div>`; }
 }
 
-/* ---------- JS ---------- */
+/* ---------- JS run ---------- */
 function runJS(){
-  validateHTML();
-  validateCSS();
+  validateHTML(); validateCSS();
   const p=document.getElementById("jsPanel");
   p.innerHTML="";
   try{
-    let r=eval(files.js);
+    let r=eval(files["script.js"] || "");
     if(r!==undefined) p.innerHTML+=`<div class="log">${r}</div>`;
-  }catch(e){ p.innerHTML+=`<div class="error">${e.message}</div>` }
+  }catch(e){ p.innerHTML=`<div class="error">${e.message}</div>` }
 }
 
-/* ---------- small preview ---------- */
-function showPreview(){
-  const frame=document.getElementById("previewFrame");
-  frame.srcdoc = makePreviewHTML();
-}
-
-/* ---------- full preview (fixed) ---------- */
+/* ---------- preview ---------- */
 function showPreviewFull(){
-  files[ext] = cmEditor.getValue();
   const frame=document.getElementById("previewFrame");
-  frame.srcdoc = makePreviewHTML();
-
-  document.getElementById("editorArea").style.display="none";
-  document.getElementById("previewArea").style.display="block";
-}
-
-/* create preview html */
-function makePreviewHTML(){
-  return `
-  <!DOCTYPE html>
-  <html><head>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <style>${files.css}</style>
-  </head>
-  <body>
-  ${files.html}
+  frame.srcdoc = `
+  <html><head><style>${files["style.css"]}</style></head>
+  <body>${files["index.html"]}
   <script>
-    try { ${files.js} }
-    catch(e){ document.body.innerHTML += '<pre style="color:red">'+ e + '</pre>'; }
+  try{ ${files["script.js"]} }
+  catch(e){ document.body.innerHTML+='<pre style="color:red">'+e+'</pre>' }
   <\/script>
-  </body>
-  </html>`;
+  </body></html>`;
+  document.getElementById("previewArea").style.display="block";
+  document.getElementById("editorArea").style.display="none";
 }
-
-/* ---------- back from preview ---------- */
 function hidePreview(){
   document.getElementById("previewArea").style.display="none";
   document.getElementById("editorArea").style.display="block";
 }
 
-/* ---------- fullscreen console ---------- */
+/* ---------- full console ---------- */
 function showConsoleFull(){
+  const f=document.getElementById("consoleFull");
   document.getElementById("consoleFullContent").innerText =
-    document.getElementById("jsPanel").innerText;
-  document.getElementById("consoleFull").style.display="block";
+     document.getElementById("jsPanel").innerText;
+  f.style.display="block";
+}
+function hideConsoleFull(){
+  document.getElementById("consoleFull").style.display="none";
 }
 </script>
 </body>
 </html>
-
