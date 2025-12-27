@@ -1,177 +1,206 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JS Playground</title>
-  <style>
-    :root {
-      --bg: #020617;
-      --panel: #020617;
-      --text: #e5e7eb;
-      --editor: #020617;
-      --code: #22c55e;
-      --accent: #2563eb;
-    }
-    body.light {
-      --bg: #f8fafc;
-      --panel: #ffffff;
-      --text: #0f172a;
-      --editor: #f1f5f9;
-      --code: #0f172a;
-      --accent: #2563eb;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: var(--bg);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: monospace;
-      color: var(--text);
-      padding: 16px;
-    }
-    .app {
-      width: 100%;
-      max-width: 900px;
-      background: var(--panel);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 25px 50px rgba(0,0,0,0.6);
-    }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    h1 { font-size: 20px; color: var(--accent); margin: 0; }
-    header button { padding: 6px 10px; border-radius: 8px; border: none; cursor: pointer; background: var(--accent); color: white; }
-    .tabs { display: flex; gap: 6px; margin-bottom: 6px; }
-    .tab { padding: 6px 10px; border-radius: 6px; cursor: pointer; background: #334155; color: white; font-size: 14px; }
-    .tab.active { background: var(--accent); }
-    .editor-wrapper { display: flex; border: 1px solid #334155; border-radius: 10px; overflow: hidden; }
-    .lines { padding: 12px 6px; text-align: right; color: #64748b; user-select: none; font-size: 14px; line-height: 1.6; }
-    textarea {
-      flex: 1;
-      height: 260px;
-      background: var(--editor);
-      color: var(--code);
-      border: none;
-      padding: 12px;
-      font-size: 15px;
-      line-height: 1.6;
-      resize: none;
-      outline: none;
-    }
-    .buttons { display: flex; gap: 8px; margin: 12px 0; }
-    .buttons button { flex: 1; padding: 12px; font-size: 16px; background: var(--accent); color: white; border: none; border-radius: 10px; cursor: pointer; }
-    .console { background: black; padding: 12px; border-radius: 10px; height: 220px; overflow-y: auto; font-size: 14px; }
-    .log { color: var(--text); }
-    .error { color: #ef4444; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Playground — HTML CSS JS</title>
+
+<!-- ---------- CodeMirror core ---------- -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.css" />
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.js"></script>
+
+<!-- ---------- CodeMirror modes ---------- -->
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/javascript/javascript.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/css/css.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/htmlmixed/htmlmixed.js"></script>
+
+<!-- ---------- Linting (red underline errors) ---------- -->
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/lint/lint.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/lint/lint.css" />
+
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/lint/javascript-lint.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/eslint/8.56.0/eslint.min.js"></script>
+
+<!-- ---------- Style ---------- -->
+<style>
+:root{
+ --bg:#020617;--panel:#0f172a;--text:#e5e7eb;
+ --accent:#2563eb;--console:#000;--editor-bg:#111827;
+ --font:16px;
+}
+body.light{
+ --bg:#f8fafc;--panel:#ffffff;--text:#0f172a;
+ --accent:#2563eb;--console:#ffffff;--editor-bg:#e2e8f0;
+}
+*{box-sizing:border-box;}
+body{
+ margin:0;background:var(--bg);color:var(--text);
+ font-family:monospace;display:flex;justify-content:center;
+ padding:12px;
+}
+.app{
+ width:100%;max-width:900px;background:var(--panel);padding:12px;
+ border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.4);
+}
+header{display:flex;justify-content:space-between;align-items:center;}
+h1{font-size:18px;margin:0;color:var(--accent);}
+
+.tabs,.output-tabs{display:flex;gap:6px;margin:10px 0;}
+.tab,.outtab{
+ padding:6px 10px;border-radius:6px;cursor:pointer;
+ background:#334155;color:white;font-size:14px;
+}
+.tab.active,.outtab.active{background:var(--accent);}
+
+#editor-box{border:1px solid #334155;border-radius:8px;overflow:hidden;}
+
+.CodeMirror{
+ width:100%;height:260px;font-size:var(--font);
+ background:var(--editor-bg);color:var(--text);
+}
+
+.buttons{display:flex;gap:8px;margin:10px 0;}
+.buttons button{
+ flex:1;padding:10px;font-size:15px;background:var(--accent);
+ color:white;border:none;border-radius:8px;cursor:pointer;
+}
+
+.output-box{display:none;}
+.output-box.active{display:block;}
+
+.console{
+ background:var(--console);padding:10px;border-radius:8px;
+ height:220px;overflow:auto;font-size:14px;
+}
+.preview-frame{
+ width:100%;height:220px;border:1px solid #334155;
+ border-radius:8px;background:white;
+}
+.log{color:var(--text);}
+.error{color:#ef4444;}
+</style>
 </head>
+
 <body>
-  <div class="app">
-    <header>
-      <h1>JS Playground</h1>
-      <button onclick="toggleTheme()">🌙 / ☀️</button>
-    </header><div class="tabs">
-  <div class="tab active" onclick="switchFile(0)">main.js</div>
-  <div class="tab" onclick="switchFile(1)">index.html</div>
-  <div class="tab" onclick="switchFile(2)">style.css</div>
+<div class="app">
+<header>
+ <h1>Playground</h1>
+ <button onclick="toggleTheme()">🌙 / ☀️</button>
+</header>
+
+<!-- File Tabs -->
+<div class="tabs">
+ <div class="tab active" onclick="switchFile(0)">index.html</div>
+ <div class="tab" onclick="switchFile(1)">style.css</div>
+ <div class="tab" onclick="switchFile(2)">script.js</div>
 </div>
 
-<div class="editor-wrapper">
-  <div id="lines" class="lines">1</div>
-  <textarea id="editor"></textarea>
-</div>
+<!-- Editor -->
+<div id="editor-box"><textarea id="editor"></textarea></div>
 
+<!-- Buttons -->
 <div class="buttons">
-  <button onclick="runCode()">▶ Run</button>
-  <button onclick="clearConsole()">🧹 Clear</button>
-  <button onclick="download()">⬇ Export</button>
+ <button onclick="runAll()">▶ Run + Preview</button>
+ <button onclick="clearConsole()">🧹 Clear</button>
+ <button onclick="download()">⬇ Export</button>
 </div>
 
-<div id="console" class="console"></div>
+<!-- Output Tabs -->
+<div class="output-tabs">
+ <div class="outtab active" onclick="switchOutput(0)">Console</div>
+ <div class="outtab" onclick="switchOutput(1)">Preview</div>
+</div>
 
-  </div><script>
-  const editor = document.getElementById("editor");
-  const consoleBox = document.getElementById("console");
-  const lines = document.getElementById("lines");
-  const tabs = document.querySelectorAll(".tab");
+<!-- Output panels -->
+<div id="consoleBox" class="console output-box active"></div>
+<iframe id="preview" class="preview-frame output-box"></iframe>
 
-  let files = [
-    localStorage.getItem("file0") || "let x = 10;
-let y = 5;
-console.log(x + y);",
-    localStorage.getItem("file1") || "<div>Example HTML</div>",
-    localStorage.getItem("file2") || "body { color: red; }"
-  ];
+</div>
 
-  let current = 0;
+<!-- ---------- SCRIPT ---------- -->
+<script>
+const consoleBox=document.getElementById("consoleBox");
+const preview=document.getElementById("preview");
+const tabs=document.querySelectorAll(".tab");
+const outTabs=document.querySelectorAll(".outtab");
 
-  function updateLines() {
-    lines.innerHTML = Array.from({ length: editor.value.split("
-").length }, (_, i) => i + 1).join("<br>");
-  }
+let files=[
+ localStorage.getItem("file_html") || "<h1>Hello!</h1>",
+ localStorage.getItem("file_css") || "body{background:#fff;}",
+ localStorage.getItem("file_js") || "console.log('JS Works!')"
+];
+let current=0;
 
-  function switchFile(i) {
-    files[current] = editor.value;
-    localStorage.setItem("file" + current, files[current]);
-    current = i;
-    editor.value = files[i];
-    tabs.forEach(t => t.classList.remove("active"));
-    tabs[i].classList.add("active");
-    updateLines();
-  }
+/* --- INIT CodeMirror --- */
+let cm=CodeMirror.fromTextArea(document.getElementById("editor"),{
+ mode:"htmlmixed",
+ lineNumbers:true,
+ gutters:["CodeMirror-lint-markers"],
+ lint:true,
+ matchBrackets:true
+});
+cm.setValue(files[0]);
 
-  editor.value = files[0];
-  updateLines();
+function updateStorage(){
+ files[current]=cm.getValue();
+ localStorage.setItem("file_"+current,files[current]);
+}
 
-  editor.addEventListener("input", () => {
-    updateLines();
-    localStorage.setItem("file" + current, editor.value);
-  });
+/* --- Switch file tab --- */
+function switchFile(i){
+ updateStorage();
+ current=i;
+ cm.setValue(files[i]);
+ tabs.forEach(t=>t.classList.remove("active"));
+ tabs[i].classList.add("active");
 
-  const originalLog = console.log;
-  console.log = (...args) => {
-    originalLog(...args);
-    consoleBox.innerHTML += `<div class="log">&gt; ${args.join(" ")}</div>`;
-  };
+ // Change syntax for correct file
+ cm.setOption("mode", i===0?"htmlmixed":i===1?"css":"javascript");
+}
 
-  function clearConsole() { consoleBox.innerHTML = ""; }
+/* --- Switch output panel (console / preview) --- */
+function switchOutput(i){
+ outTabs.forEach(t=>t.classList.remove("active"));
+ outTabs[i].classList.add("active");
+ document.querySelectorAll(".output-box").forEach(b=>b.classList.remove("active"));
+ document.querySelectorAll(".output-box")[i].classList.add("active");
+}
 
-  function runCode() {
-    clearConsole();
-    const code = editor.value;
+/* --- Clear console --- */
+function clearConsole(){consoleBox.innerHTML="";}
 
-    if (current === 1) {
-      if (!code.includes("</")) consoleBox.innerHTML += `<div class='error'>HTML ERROR: Missing closing tag</div>`;
-    }
+/* --- Run + Preview with line-number error --- */
+function runAll(){
+ clearConsole();
+ updateStorage();
 
-    if (current === 2) {
-      if (!code.includes("{")) consoleBox.innerHTML += `<div class='error'>CSS ERROR: Missing '{'</div>`;
-    }
+ const html=files[0],css=files[1],js=files[2];
 
-    if (current === 0) {
-      try {
-        const result = eval(code);
-        if (result !== undefined) consoleBox.innerHTML += `<div class='log'>&gt; ${result}</div>`;
-      } catch (e) {
-        consoleBox.innerHTML += `<div class='error'>JS ERROR: ${e.message}</div>`;
-      }
-    }
-  }
+ const full=`<!DOCTYPE html><html><head><style>${css}</style></head>
+ <body>${html}<script>${js}<\/script></body></html>`;
 
-  document.addEventListener("keydown", e => {
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") runCode();
-  });
+ preview.srcdoc=full;
 
-  function toggleTheme() { document.body.classList.toggle("light"); }
+ try{
+   eval(js);
+ }catch(e){
+   const m=e.stack.match(/<anonymous>:(\d+):/);
+   const line=m?m[1]:"?";
+   consoleBox.innerHTML+=`<div class="error">🔴 Error on line ${line}: ${e.message}</div>`;
+ }
+}
 
-  function download() {
-    const blob = new Blob([editor.value], { type: "text/plain" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = tabs[current].innerText;
-    a.click();
-  }
-</script></body>
+/* --- theme toggle --- */
+function toggleTheme(){document.body.classList.toggle("light");}
+
+/* --- download file --- */
+function download(){
+ const blob=new Blob([cm.getValue()],{type:"text/plain"});
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);
+ a.download=tabs[current].innerText;
+ a.click();
+}
+</script>
+</body>
 </html>
