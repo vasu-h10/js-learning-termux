@@ -3,109 +3,96 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Playground V13 — CodeMirror + JSX/TSX + Fullscreen</title>
+<title>Playground v13.1 — JSX + TSX + React</title>
 
-<!-- ✨ CodeMirror 6 (editor) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.css" />
-<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.js"></script>
+<!-- REACT & REACT DOM FOR JSX/TSX -->
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 
-<!-- 🔍 Syntax modes -->
-<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/javascript/javascript.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/xml/xml.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/css/css.js"></script>
-
-<!-- 🎨 Theme -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/theme/monokai.css" />
-
-<!-- ⚛ JSX + TSX execution -->
+<!-- BABEL FOR JSX/TSX TRANSFORM -->
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
 <style>
 :root {
-  --bg:#020617;
-  --panel:#020617;
-  --text:#e5e7eb;
-  --accent:#2563eb;
+  --bg:#020617; --panel:#020617; --text:#e5e7eb;
+  --editor:#0f172a; --accent:#2563eb; --console-bg:#000;
 }
 
 body {
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:monospace;
-  padding:10px;
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:monospace; display:flex; justify-content:center;
+  padding:10px; min-height:100vh;
 }
 
 .app {
-  max-width:1000px;
-  margin:auto;
-  background:var(--panel);
-  padding:12px;
-  border-radius:10px;
+  width:100%; max-width:900px; background:var(--panel);
+  padding:12px; border-radius:12px;
 }
 
 .file-tabs {
-  display:flex;
-  gap:6px;
-  overflow-x:auto;
-  padding-bottom:6px;
+  display:flex; gap:6px; margin:8px 0; overflow-x:auto;
 }
 
 .file-btn {
-  padding:8px 12px;
-  background:#334155;
-  border-radius:8px;
-  color:white;
-  cursor:pointer;
+  padding:8px 12px; background:#334155; border-radius:8px;
+  color:white; cursor:pointer; flex-shrink:0;
 }
+
 .file-btn.active { background:var(--accent); }
 
-#console,#errors {
-  background:black;
-  padding:8px;
-  border-radius:6px;
-  font-size:14px;
-  overflow-y:auto;
-  height:150px;
+textarea {
+  width:100%; height:300px; background:var(--editor); color:#22c55e;
+  border-radius:10px; border:none; padding:12px; font-size:16px; resize:none;
 }
 
-.error {color:red;}
-.log{color:white;}
-
+.buttons {
+  display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;
+}
 button {
-  padding:8px;
-  border-radius:8px;
-  background:var(--accent);
-  color:white;
-  border:none;
-  cursor:pointer;
-  margin:4px 0;
-  width:100%;
+  flex:1; padding:12px; border-radius:10px;
+  border:none; background:var(--accent); color:white;
+  cursor:pointer; font-size:16px;
 }
 
-#previewFull,#consoleFull {
-  display:none;
-  position:fixed;
-  top:0;left:0;
-  width:100vw;height:100vh;
-  background:black;
-  z-index:9999;
+.console {
+  background:var(--console-bg); height:200px;
+  border-radius:10px; padding:12px; overflow-y:auto;
+  margin-top:12px; font-size:14px;
 }
+.error { color:red; }
+.log { color:white; }
 
+/* FULLSCREEN CONSOLE */
+#consoleFull {
+  display:none; position:fixed; top:0; left:0;
+  width:100vw; height:100vh; background:black; padding:12px;
+  overflow-y:auto; z-index:9999;
+}
+#consoleFullContent { white-space:pre-wrap; }
+
+/* FULLSCREEN PREVIEW */
+#previewArea {
+  display:none; position:fixed; top:0; left:0;
+  width:100vw; height:100vh; background:white; z-index:9999;
+}
 #previewFrame {
-  width:100%;
-  height:calc(100vh - 60px);
-  border:none;
-  background:white;
+  width:100vw; height:calc(100vh - 55px);
+  border:none; background:white;
+}
+
+/* MOBILE */
+@media(max-width:600px){
+  textarea { height:350px; font-size:16px; }
+  button { font-size:15px; padding:10px; }
 }
 </style>
 </head>
 
 <body>
 <div class="app" id="editorArea">
-  <h2>Playground V13 — CodeMirror + JSX + TSX</h2>
+  <h2>Playground v13.1 — React + JSX + TSX</h2>
 
-  <!-- 🔤 Files -->
+  <!-- FILE SWITCHER -->
   <div class="file-tabs">
     <div class="file-btn active" onclick="switchFile('html')">index.html</div>
     <div class="file-btn" onclick="switchFile('css')">style.css</div>
@@ -114,145 +101,146 @@ button {
     <div class="file-btn" onclick="switchFile('tsx')">app.tsx</div>
   </div>
 
-  <!-- 📝 Editor -->
   <textarea id="editor"></textarea>
 
-  <!-- 🧪 Buttons -->
-  <button onclick="runCode()">▶ Run</button>
-  <button onclick="showPreviewFull()">🌍 Full Preview</button>
-  <button onclick="showConsoleFull()">🖥 Full Console</button>
-  <button onclick="clearPanels()">🧹 Clear</button>
+  <div class="buttons">
+    <button onclick="runCode()">▶ Run</button>
+    <button onclick="showConsole()">💬 Console bottom</button>
+    <button onclick="showPreview()">🌍 Preview</button>
+    <button onclick="showConsoleFull()">🖥 Full Console</button>
+    <button onclick="showPreviewFull()">🌐 Full Preview</button>
+    <button onclick="clearConsole()">🧹 Clear</button>
+  </div>
 
-  <!-- 📌 Output -->
-  <h3>Console</h3>
-  <div id="console"></div>
-
-  <h3>Errors</h3>
-  <div id="errors"></div>
+  <div id="console" class="console"></div>
 </div>
 
-
-<!-- ⬛ FULLSCREEN CONSOLE -->
-<div id="consoleFull">
-  <button onclick="hideConsoleFull()">🔙 Back</button>
-  <pre id="consoleFullBody" style="white-space:pre-wrap;color:white;"></pre>
-</div>
-
-<!-- 🌐 FULLSCREEN PREVIEW -->
-<div id="previewFull">
-  <button onclick="hidePreviewFull()">🔙 Back</button>
+<!-- FULL PREVIEW -->
+<div id="previewArea">
+  <button onclick="hidePreview()">🔙 Back</button>
   <iframe id="previewFrame"></iframe>
 </div>
 
+<!-- FULL CONSOLE -->
+<div id="consoleFull">
+  <button onclick="hideConsoleFull()">🔙 Back</button>
+  <pre id="consoleFullContent"></pre>
+</div>
 
 <script>
-/* ================= DATA ================== */
+/* ===== FILE STORAGE ===== */
 let files = {
-  html: localStorage.getItem("html") || "<h1>Hello JSX/TSX!</h1>",
-  css: localStorage.getItem("css") || "h1{color:skyblue;}",
-  js: localStorage.getItem("js") || "console.log('JS OK');",
-  jsx: localStorage.getItem("jsx") || "function App(){ return <h2>Hello JSX!</h2> } App();",
-  tsx: localStorage.getItem("tsx") || "function App():any{ return <h2>Hello TSX!</h2>} App();"
+  html: localStorage.getItem("html") || "<h1>Hello Android!</h1><div id='root'></div>",
+  css : localStorage.getItem("css")  || "h1{color:green;}",
+  js  : localStorage.getItem("js")   || "console.log('JS Works!');",
+  jsx : localStorage.getItem("jsx")  || "function App(){return <h2>Hello JSX!</h2>} App();",
+  tsx : localStorage.getItem("tsx")  || "function App():any{return <h2>Hello TSX!</h2>} App();",
 };
 
-let curr = "html";
+let selectedExt="html";
+const editor=document.getElementById("editor");
+const consoleBox=document.getElementById("console");
 
-/* ========== EDITOR INIT =========== */
-let cm = CodeMirror.fromTextArea(document.getElementById("editor"), {
-  mode:"javascript",
-  lineNumbers:true,
-  theme:"monokai",
-  tabSize:2,
-});
-cm.setValue(files[curr]);
-
-
-/* ===== FILE SWITCH ===== */
+/* ===== SWITCH FILE ===== */
 function switchFile(ext){
-  files[curr] = cm.getValue();
-  curr = ext;
-  cm.setValue(files[ext]);
-
+  files[selectedExt]=editor.value;
+  selectedExt=ext;
+  editor.value=files[ext];
   document.querySelectorAll(".file-btn").forEach(b=>b.classList.remove("active"));
   document.querySelectorAll(".file-btn").forEach(btn=>{
     if(btn.innerText.includes(ext)) btn.classList.add("active");
   });
 }
+editor.addEventListener("input",()=>{
+  files[selectedExt]=editor.value;
+  localStorage.setItem(selectedExt,editor.value);
+});
 
+/* ===== CONSOLE ===== */
+function clearConsole(){ consoleBox.innerHTML=""; }
+function logConsole(m){ consoleBox.innerHTML+=`<div class="log">${m}</div>`; }
+function showConsole(){ window.scrollTo(0,document.body.scrollHeight); }
 
-/* ===== CLEAR ===== */
-function clearPanels(){
-  consoleDiv.innerHTML="";
-  errorsDiv.innerHTML="";
+/* FULL console */
+function showConsoleFull(){
+  consoleFull.style.display="block";
+  consoleFullContent.innerText = consoleBox.innerText;
 }
-const consoleDiv = document.getElementById("console");
-const errorsDiv = document.getElementById("errors");
+function hideConsoleFull(){ consoleFull.style.display="none"; }
 
-function printLog(msg){ consoleDiv.innerHTML+=`<div class="log">${msg}</div>`; }
-function printErr(msg){ errorsDiv.innerHTML+=`<div class="error">${msg}</div>`; }
-
-
-/* ===== RUN ===== */
+/* ===== RUN CODE ===== */
 function runCode(){
-  clearPanels();
-  files[curr]=cm.getValue();
-
+  clearConsole();
   let code = files["js"];
-  let combined = "";
 
-  if (files["jsx"]){
-    try{ combined += Babel.transform(files["jsx"],{presets:["react"]}).code; }
-    catch(e){ printErr("JSX Error: "+e.message); }
+  if(selectedExt==="jsx"||selectedExt==="tsx"){
+    try{
+      code = Babel.transform(files[selectedExt],{
+        presets:["react","typescript"],
+        filename: selectedExt==="tsx"?"file.tsx":"file.jsx"
+      }).code;
+    }catch(e){ return logConsole("TSX/JSX Error: "+e.message); }
   }
-
-  if (files["tsx"]){
-    try{ combined += Babel.transform(files["tsx"],{presets:["react","typescript"]}).code; }
-    catch(e){ printErr("TSX Error: "+e.message); }
-  }
-
-  code += "\n" + combined;
 
   try{
-    let result = eval(code);
-    if(result!==undefined) printLog("> "+result);
-  } catch(e){
-    printErr("JS Error: "+e.message);
-  }
+    let result=eval(code);
+    if(result!==undefined) logConsole("> "+result);
+  }catch(e){ logConsole("JS Error: "+e.message); }
 }
-
 
 /* ===== PREVIEW ===== */
 function generatePreview(){
+  let html = files["html"];
+  let css  = files["css"];
+  let jsCode = files["js"];
+
+  if(files["jsx"]){
+    try{
+      jsCode += "\n"+Babel.transform(files["jsx"],{
+        presets:["react"],
+        filename:"file.jsx"
+      }).code;
+    }catch(e){}
+  }
+  if(files["tsx"]){
+    try{
+      jsCode += "\n"+Babel.transform(files["tsx"],{
+        presets:["react","typescript"],
+        filename:"file.tsx"
+      }).code;
+    }catch(e){}
+  }
+
   return `
-  <html>
-    <head><style>${files.css}</style></head>
-    <body>${files.html}
-    <script>
-      try{
-        ${files.js}
-        ${Babel.transform(files.jsx,{presets:["react"]}).code}
-        ${Babel.transform(files.tsx,{presets:["react","typescript"]}).code}
-      }catch(e){
-        document.body.innerHTML += '<pre style="color:red">'+e+'</pre>'
-      }
-    <\/script>
-    </body>
-  </html>`;
+    <html>
+      <head><style>${css}</style></head>
+      <body>${html}
+      <script>
+        try{ ${jsCode} }
+        catch(e){ document.body.innerHTML += '<pre style="color:red">'+e+'</pre>' }
+      <\/script>
+      </body>
+    </html>`;
 }
 
+function showPreview(){
+  const frame=document.getElementById("previewFrame");
+  files[selectedExt]=editor.value;
+  frame.srcdoc=generatePreview();
+}
 function showPreviewFull(){
-  previewFull.style.display="block";
-  previewFrame.srcdoc = generatePreview();
+  files[selectedExt]=editor.value;
+  previewArea.style.display="block";
+  editorArea.style.display="none";
+  previewFrame.srcdoc=generatePreview();
 }
-function hidePreviewFull(){ previewFull.style.display="none"; }
-
-
-/* ===== CONSOLE FULL ===== */
-function showConsoleFull(){
-  consoleFull.style.display="block";
-  consoleFullBody.innerText = consoleDiv.innerText + "\n" + errorsDiv.innerText;
+function hidePreview(){
+  previewArea.style.display="none";
+  editorArea.style.display="block";
 }
-function hideConsoleFull(){ consoleFull.style.display="none"; }
+
+/* INIT */
+editor.value=files["html"];
 </script>
 </body>
 </html>
