@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Playground v16 — Hybrid Beginner</title>
+<title>Playground v16 — Beginner</title>
 
 <!-- CodeMirror Syntax Highlight -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
@@ -14,37 +14,49 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
 
 <style>
-:root { --bg:#020617; --panel:#020617; --text:#e5e7eb;
-        --accent:#2563eb; --console-bg:#000; }
-body {
-  margin:0;background:var(--bg);color:var(--text);
-  font-family:monospace;display:flex;justify-content:center;
-  padding:10px;min-height:100vh;
+:root {
+  --bg:#020617; --panel:#020617; --text:#e5e7eb;
+  --accent:#2563eb; --console-bg:#000;
 }
-.app{width:100%;max-width:900px;background:var(--panel);
-     border-radius:12px;padding:12px;}
-.file-tabs{display:flex;gap:6px;margin-bottom:8px;}
-.file-btn{padding:8px 12px;background:#334155;border-radius:8px;cursor:pointer;}
-.file-btn.active{background:var(--accent);}
-.buttons{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
-button{flex:1;padding:10px;border:none;border-radius:8px;
-       background:var(--accent);color:white;cursor:pointer;}
-.panel-tabs{display:flex;gap:6px;margin-top:10px;}
-.panel-btn{padding:6px 10px;background:#334155;border-radius:6px;cursor:pointer;}
-.panel-btn.active{background:var(--accent);}
-.panel{margin-top:8px;background:var(--console-bg);padding:12px;
-       border-radius:10px;height:200px;overflow-y:auto;font-size:14px;display:none;}
-.panel.active{display:block;}
-.error{color:red;} .log{color:white;}
+body {
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:monospace; display:flex; justify-content:center;
+  padding:10px; min-height:100vh;
+}
+.app {
+  width:100%; max-width:900px; background:var(--panel);
+  border-radius:12px; padding:12px;
+}
 
-#previewArea{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:white;z-index:9999;}
-#previewFrame{width:100%;height:calc(100vh - 50px);border:none;}
-#consoleFull{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:black;color:white;z-index:9999;}
-#consoleFullContent{white-space:pre-wrap;}
+.file-tabs { display:flex; gap:6px; margin-bottom:8px; overflow-x:auto; }
+.file-btn {
+  padding:8px 12px; background:#334155; border-radius:8px;
+  cursor:pointer; flex-shrink:0;
+}
+.file-btn.active { background:var(--accent); }
 
-#historyBox{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000b;z-index:9999;overflow:auto;}
-#historyInner{max-width:700px;margin:auto;margin-top:30px;background:#111;padding:10px;border-radius:10px;}
-.history-item{background:#222;padding:6px;margin:4px 0;display:flex;justify-content:space-between;}
+.buttons { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+button {
+  flex:1; padding:10px; border:none; border-radius:8px;
+  background:var(--accent); color:white; cursor:pointer;
+}
+
+.panel {
+  margin-top:8px; background:var(--console-bg); border-radius:10px;
+  padding:12px; height:200px; overflow-y:auto;
+}
+.log{color:white;} .error{color:red;}
+
+#previewArea {
+  display:none; position:fixed; top:0; left:0;
+  width:100vw; height:100vh; background:white; z-index:9999;
+}
+#previewFrame { width:100%; height:calc(100vh - 50px); border:none; }
+
+#consoleFull {
+  display:none; position:fixed; top:0; left:0; z-index:9999;
+  width:100vw; height:100vh; background:black; color:white;
+}
 </style>
 </head>
 
@@ -52,126 +64,109 @@ button{flex:1;padding:10px;border:none;border-radius:8px;
 <div class="app" id="editorArea">
   <h2>Playground v16 — HTML / CSS / JS</h2>
 
+  <!-- core files -->
   <div class="file-tabs">
     <div class="file-btn active" onclick="switchFile('index.html')">index.html</div>
     <div class="file-btn" onclick="switchFile('style.css')">style.css</div>
     <div class="file-btn" onclick="switchFile('script.js')">script.js</div>
   </div>
 
+  <!-- editor -->
   <textarea id="editor"></textarea>
 
+  <!-- buttons -->
   <div class="buttons">
     <button onclick="runJS()">▶ Run JS</button>
-    <button onclick="showPreviewFull()">🌐 Preview Full</button>
-    <button onclick="showConsoleFull()">🖥 Console Full</button>
-    <button onclick="validateW3()">✔ Validate W3C</button>
+    <button onclick="showPreviewFull()">🌐 Preview</button>
+    <button onclick="showConsoleFull()">🖥 Console</button>
   </div>
 
-  <div class="panel-tabs">
-    <div class="panel-btn active" onclick="showPanel('htmlPanel')">HTML validator</div>
-    <div class="panel-btn" onclick="showPanel('cssPanel')">CSS validator</div>
-    <div class="panel-btn" onclick="showPanel('jsPanel')">JS console</div>
-  </div>
-
-  <div id="htmlPanel" class="panel active"></div>
-  <div id="cssPanel" class="panel"></div>
-  <div id="jsPanel" class="panel"></div>
+  <!-- console output -->
+  <div id="consolePanel" class="panel"></div>
 </div>
 
+<!-- fullscreen preview -->
 <div id="previewArea">
   <button onclick="hidePreview()" style="width:100%;">🔙 Back</button>
   <iframe id="previewFrame"></iframe>
 </div>
 
+<!-- fullscreen console -->
 <div id="consoleFull">
-  <button onclick="hideConsoleFull()">🔙 Back</button>
-  <pre id="consoleFullContent"></pre>
+  <button onclick="hideConsoleFull()" style="width:100%;">🔙 Back</button>
+  <pre id="consoleFullContent" style="padding:10px;"></pre>
 </div>
 
 <script>
 /* ---------- storage ---------- */
 let files = JSON.parse(localStorage.getItem("files_v16") || "{}");
-if(Object.keys(files).length===0){
-  files={ "index.html":"<h1>Hello!</h1>",
-          "style.css":"body{background:white;padding:10px;}",
-          "script.js":"console.log('JS OK');" };
+if(Object.keys(files).length === 0){
+  files = {
+    "index.html":"<h1>Hello!</h1>",
+    "style.css":"body{ background:white; font-family:Arial; }",
+    "script.js":"console.log('JS OK');"
+  };
 }
-function saveFiles(){ localStorage.setItem("files_v16",JSON.stringify(files)); }
+function saveFiles(){ localStorage.setItem("files_v16", JSON.stringify(files)); }
 
 /* ---------- editor ---------- */
-let currentFile="index.html"; let cmEditor;
+let currentFile="index.html";
+let cmEditor;
+
 function setupEditor(){
-  cmEditor=CodeMirror.fromTextArea(document.getElementById("editor"),{
-    mode:"xml",theme:"dracula",lineNumbers:true
+  cmEditor = CodeMirror.fromTextArea(document.getElementById("editor"),{
+    mode:"xml", theme:"dracula", lineNumbers:true
   });
   cmEditor.setValue(files[currentFile]);
+
   cmEditor.on("change",()=>{
-    files[currentFile]=cmEditor.getValue();
+    files[currentFile] = cmEditor.getValue();
     saveFiles();
-    validateHTML(); validateCSS();
   });
 }
 setupEditor();
 
+/* ---------- switch file ---------- */
 function switchFile(name){
-  files[currentFile]=cmEditor.getValue();
-  currentFile=name;
-  cmEditor.setOption("mode",name.endsWith(".js")?"javascript":name.endsWith(".css")?"css":"xml");
-  cmEditor.setValue(files[name]);
+  files[currentFile] = cmEditor.getValue();
+  currentFile = name;
+
+  let mode = name.endsWith(".js") ? "javascript" :
+             name.endsWith(".css") ? "css" : "xml";
+
+  cmEditor.setOption("mode", mode);
+  cmEditor.setValue(files[currentFile]);
+
   document.querySelectorAll(".file-btn").forEach(b=>b.classList.remove("active"));
   [...document.querySelectorAll(".file-btn")].find(b=>b.innerText.includes(name)).classList.add("active");
-  validateHTML(); validateCSS();
 }
 
-/* ---------- panels ---------- */
-function showPanel(id){
-  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-  document.querySelectorAll(".panel-btn").forEach(b=>b.classList.remove("active"));
-  [...document.querySelectorAll(".panel-btn")].find(b=>b.innerText.toLowerCase().includes(id.substring(0,2))).classList.add("active");
-}
-
-/* ---------- local validators ---------- */
-function validateHTML(){
-  const p=document.getElementById("htmlPanel");
-  p.innerHTML="";
-  const parser=new DOMParser();
-  const doc=parser.parseFromString(files["index.html"],"text/html");
-  doc.querySelectorAll("parsererror").forEach(e=>p.innerHTML+=`<div class="error">${e.textContent}</div>`);
-}
-function validateCSS(){
-  const p=document.getElementById("cssPanel");
-  p.innerHTML="";
-  try{ new CSSStyleSheet().replaceSync(files["style.css"]); }
-  catch(e){ p.innerHTML=`<div class="error">${e.message}</div>`; }
-}
-
-/* ---------- JS run ---------- */
+/* ---------- JS Console ---------- */
 function runJS(){
-  validateHTML(); validateCSS();
-  const p=document.getElementById("jsPanel");
-  p.innerHTML="";
+  const panel = document.getElementById("consolePanel");
+  panel.innerHTML="";
   try{
-    let r=eval(files["script.js"]);
-    if(r!==undefined)p.innerHTML+=`<div class="log">${r}</div>`;
-  }catch(e){p.innerHTML+=`<div class="error">${e.message}</div>`;}
-}
-
-/* ---------- W3C validate ---------- */
-async function validateW3(){
-  alert("Opening W3 validator in browser");
-  window.open(`https://validator.w3.org/nu/?doc=data:text/html,${encodeURIComponent(files["index.html"])}`);
+    const result = eval(files["script.js"]);
+    if(result!==undefined) panel.innerHTML+=`<div class="log">${result}</div>`;
+  }catch(e){
+    panel.innerHTML+=`<div class="error">${e.message}</div>`;
+  }
 }
 
 /* ---------- preview ---------- */
 function showPreviewFull(){
-  validateHTML(); validateCSS();
-  const frame=document.getElementById("previewFrame");
-  frame.srcdoc=`<html><head><style>${files["style.css"]}</style></head>
+  const frame = document.getElementById("previewFrame");
+  frame.srcdoc = `
+  <html><head><style>${files["style.css"]}</style></head>
   <body>${files["index.html"]}
   <script>
-  try{${files["script.js"]}}catch(e){document.body.innerHTML+='<pre style=color:red>'+e+'</pre>'}
-  <\/script></body></html>`;
+    try{ ${files["script.js"]} }
+    catch(e){ document.body.innerHTML+='<pre style="color:red">'+e+'</pre>' }
+  <\/script>
+  </body></html>`;
+  showPreview();
+}
+function showPreview(){
   document.getElementById("previewArea").style.display="block";
   document.getElementById("editorArea").style.display="none";
 }
@@ -180,17 +175,15 @@ function hidePreview(){
   document.getElementById("editorArea").style.display="block";
 }
 
-/* ---------- console fullscreen ---------- */
+/* ---------- full console ---------- */
 function showConsoleFull(){
-  document.getElementById("consoleFullContent").innerText=document.getElementById("jsPanel").innerText;
+  document.getElementById("consoleFullContent").innerText =
+    document.getElementById("consolePanel").innerText;
   document.getElementById("consoleFull").style.display="block";
 }
 function hideConsoleFull(){
   document.getElementById("consoleFull").style.display="none";
 }
-
-/* ---------- init ---------- */
-validateHTML(); validateCSS();
 </script>
 </body>
 </html>
