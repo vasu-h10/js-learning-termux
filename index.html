@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Playground v16 — Beginner</title>
+<title>Playground v17 — Beginner + History + Download</title>
 
 <!-- CodeMirror Syntax Highlight -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
@@ -13,39 +13,40 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
 
+<!-- JSZip for download -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
 <style>
-:root {
-  --bg:#020617; --panel:#020617; --text:#e5e7eb;
-  --accent:#2563eb; --console-bg:#000;
-}
+:root { --bg:#020617; --panel:#020617; --text:#e5e7eb;
+        --accent:#2563eb; --console-bg:#000; }
 body {
   margin:0; background:var(--bg); color:var(--text);
   font-family:monospace; display:flex; justify-content:center;
   padding:10px; min-height:100vh;
 }
-.app {
-  width:100%; max-width:900px; background:var(--panel);
-  border-radius:12px; padding:12px;
-}
-
-.file-tabs { display:flex; gap:6px; margin-bottom:8px; overflow-x:auto; }
-.file-btn {
-  padding:8px 12px; background:#334155; border-radius:8px;
-  cursor:pointer; flex-shrink:0;
-}
+.app { width:100%; max-width:900px; background:var(--panel);
+       border-radius:12px; padding:12px; }
+.file-tabs { display:flex; gap:6px; overflow-x:auto; margin-bottom:8px; }
+.file-btn { padding:8px 12px; background:#334155;
+            border-radius:8px; cursor:pointer; flex-shrink:0; }
 .file-btn.active { background:var(--accent); }
 
 .buttons { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
-button {
-  flex:1; padding:10px; border:none; border-radius:8px;
-  background:var(--accent); color:white; cursor:pointer;
-}
+button { flex:1; padding:10px; border:none; border-radius:8px;
+         background:var(--accent); color:white; cursor:pointer; }
+
+.panel-tabs { display:flex; gap:6px; margin-top:10px; }
+.panel-btn { padding:6px 10px; background:#334155; border-radius:6px;
+             cursor:pointer; flex-shrink:0; }
+.panel-btn.active { background:var(--accent); }
 
 .panel {
-  margin-top:8px; background:var(--console-bg); border-radius:10px;
-  padding:12px; height:200px; overflow-y:auto;
+  margin-top:8px; background:var(--console-bg); padding:12px;
+  border-radius:10px; height:200px; overflow-y:auto; font-size:14px;
+  display:none;
 }
-.log{color:white;} .error{color:red;}
+.panel.active { display:block; }
+.error{color:red;} .log{color:white;}
 
 #previewArea {
   display:none; position:fixed; top:0; left:0;
@@ -53,120 +54,131 @@ button {
 }
 #previewFrame { width:100%; height:calc(100vh - 50px); border:none; }
 
-#consoleFull {
-  display:none; position:fixed; top:0; left:0; z-index:9999;
-  width:100vw; height:100vh; background:black; color:white;
+/* History modal */
+#historyBox {
+  display:none; position:fixed; top:0; left:0;
+  width:100vw; height:100vh; background:#000b; z-index:9999;
+  padding:10px; overflow:auto;
 }
+#historyInner {
+  background:#111; padding:10px; border-radius:10px;
+  max-width:700px; margin:auto; margin-top:30px;
+}
+.history-item {
+  padding:6px; margin:4px 0; background:#222; border-radius:6px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.history-item button { padding:4px 8px; font-size:14px; }
 </style>
 </head>
 
 <body>
 <div class="app" id="editorArea">
-  <h2>Playground v16 — HTML / CSS / JS</h2>
+  <h2>Playground v17 — Beginner Mode</h2>
 
-  <!-- core files -->
+  <!-- File tabs -->
   <div class="file-tabs">
     <div class="file-btn active" onclick="switchFile('index.html')">index.html</div>
     <div class="file-btn" onclick="switchFile('style.css')">style.css</div>
     <div class="file-btn" onclick="switchFile('script.js')">script.js</div>
   </div>
 
-  <!-- editor -->
   <textarea id="editor"></textarea>
 
-  <!-- buttons -->
   <div class="buttons">
     <button onclick="runJS()">▶ Run JS</button>
     <button onclick="showPreviewFull()">🌐 Preview</button>
     <button onclick="showConsoleFull()">🖥 Console</button>
+    <button onclick="openHistory()">📜 History</button>
+    <button onclick="downloadProject()">⬇ Download</button>
   </div>
 
-  <!-- console output -->
-  <div id="consolePanel" class="panel"></div>
+  <div class="panel-tabs">
+    <div class="panel-btn active" onclick="showPanel('jsPanel')">Console</div>
+  </div>
+  <div id="jsPanel" class="panel active"></div>
 </div>
 
-<!-- fullscreen preview -->
+<!-- Preview -->
 <div id="previewArea">
   <button onclick="hidePreview()" style="width:100%;">🔙 Back</button>
   <iframe id="previewFrame"></iframe>
 </div>
 
-<!-- fullscreen console -->
-<div id="consoleFull">
-  <button onclick="hideConsoleFull()" style="width:100%;">🔙 Back</button>
-  <pre id="consoleFullContent" style="padding:10px;"></pre>
+<!-- Console fullscreen -->
+<div id="consoleFull"
+ style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:black;color:white;z-index:9999;">
+  <button onclick="hideConsoleFull()">🔙 Back</button>
+  <pre id="consoleFullContent"></pre>
+</div>
+
+<!-- History -->
+<div id="historyBox">
+  <div id="historyInner"></div>
 </div>
 
 <script>
-/* ---------- storage ---------- */
-let files = JSON.parse(localStorage.getItem("files_v16") || "{}");
+let files = JSON.parse(localStorage.getItem("files_v17") || "{}");
+let historyList = JSON.parse(localStorage.getItem("history_v17") || "[]");
+
 if(Object.keys(files).length === 0){
   files = {
-    "index.html":"<h1>Hello!</h1>",
-    "style.css":"body{ background:white; font-family:Arial; }",
-    "script.js":"console.log('JS OK');"
+    "index.html":"<h1>Hello World!</h1>",
+    "style.css":"body{background:white;}",
+    "script.js":"console.log('welcome!');"
   };
 }
-function saveFiles(){ localStorage.setItem("files_v16", JSON.stringify(files)); }
+function saveFiles(){ localStorage.setItem("files_v17", JSON.stringify(files)); }
 
-/* ---------- editor ---------- */
 let currentFile="index.html";
 let cmEditor;
 
 function setupEditor(){
   cmEditor = CodeMirror.fromTextArea(document.getElementById("editor"),{
-    mode:"xml", theme:"dracula", lineNumbers:true
+    mode:getMode(currentFile), theme:"dracula", lineNumbers:true
   });
   cmEditor.setValue(files[currentFile]);
-
   cmEditor.on("change",()=>{
-    files[currentFile] = cmEditor.getValue();
+    files[currentFile]=cmEditor.getValue();
     saveFiles();
   });
 }
 setupEditor();
 
-/* ---------- switch file ---------- */
 function switchFile(name){
-  files[currentFile] = cmEditor.getValue();
-  currentFile = name;
-
-  let mode = name.endsWith(".js") ? "javascript" :
-             name.endsWith(".css") ? "css" : "xml";
-
-  cmEditor.setOption("mode", mode);
+  files[currentFile]=cmEditor.getValue();
+  currentFile=name;
+  cmEditor.setOption("mode", getMode(name));
   cmEditor.setValue(files[currentFile]);
-
   document.querySelectorAll(".file-btn").forEach(b=>b.classList.remove("active"));
   [...document.querySelectorAll(".file-btn")].find(b=>b.innerText.includes(name)).classList.add("active");
 }
+function getMode(name){
+  if(name.endsWith(".js")) return "javascript";
+  if(name.endsWith(".css")) return "css";
+  return "xml";
+}
 
-/* ---------- JS Console ---------- */
+function makeHistory(){
+  historyList.push({ time:new Date().toLocaleString(), snapshot:JSON.stringify(files) });
+  localStorage.setItem("history_v17", JSON.stringify(historyList));
+}
+
 function runJS(){
-  const panel = document.getElementById("consolePanel");
-  panel.innerHTML="";
+  makeHistory();
+  const p=document.getElementById("jsPanel");
+  p.innerHTML="";
   try{
-    const result = eval(files["script.js"]);
-    if(result!==undefined) panel.innerHTML+=`<div class="log">${result}</div>`;
-  }catch(e){
-    panel.innerHTML+=`<div class="error">${e.message}</div>`;
-  }
+    let r=eval(files["script.js"]);
+    if(r!==undefined) p.innerHTML+=`<div class="log">${r}</div>`;
+  }catch(e){ p.innerHTML=`<div class="error">${e.message}</div>` }
 }
 
-/* ---------- preview ---------- */
 function showPreviewFull(){
-  const frame = document.getElementById("previewFrame");
-  frame.srcdoc = `
-  <html><head><style>${files["style.css"]}</style></head>
-  <body>${files["index.html"]}
-  <script>
-    try{ ${files["script.js"]} }
-    catch(e){ document.body.innerHTML+='<pre style="color:red">'+e+'</pre>' }
-  <\/script>
-  </body></html>`;
-  showPreview();
-}
-function showPreview(){
+  makeHistory();
+  const frame=document.getElementById("previewFrame");
+  frame.srcdoc=`<html><head><style>${files["style.css"]}</style></head>
+  <body>${files["index.html"]}<script>${files["script.js"]}</script></body></html>`;
   document.getElementById("previewArea").style.display="block";
   document.getElementById("editorArea").style.display="none";
 }
@@ -175,14 +187,51 @@ function hidePreview(){
   document.getElementById("editorArea").style.display="block";
 }
 
-/* ---------- full console ---------- */
 function showConsoleFull(){
-  document.getElementById("consoleFullContent").innerText =
-    document.getElementById("consolePanel").innerText;
-  document.getElementById("consoleFull").style.display="block";
+  const f=document.getElementById("consoleFull");
+  document.getElementById("consoleFullContent").innerText=document.getElementById("jsPanel").innerText;
+  f.style.display="block";
 }
 function hideConsoleFull(){
   document.getElementById("consoleFull").style.display="none";
+}
+
+function openHistory(){
+  const div=document.getElementById("historyInner");
+  div.innerHTML="<h3>History — progress by time</h3>";
+  historyList.forEach((h,i)=>{
+    div.innerHTML+=`
+      <div class="history-item">
+        <span>${h.time}</span>
+        <button onclick="restoreHistory(${i})">Restore</button>
+      </div>`;
+  });
+  document.getElementById("historyBox").style.display="block";
+}
+
+function restoreHistory(i){
+  files=JSON.parse(historyList[i].snapshot);
+  saveFiles();
+  cmEditor.setValue(files[currentFile]);
+  alert("Restored!");
+}
+
+document.getElementById("historyBox").onclick=e=>{
+  if(e.target.id==="historyBox") e.target.style.display="none";
+};
+
+/* ---- DOWNLOAD ZIP ---- */
+function downloadProject(){
+  const zip = new JSZip();
+  zip.file("index.html", files["index.html"]);
+  zip.file("style.css", files["style.css"]);
+  zip.file("script.js", files["script.js"]);
+  zip.generateAsync({type:"blob"}).then(content=>{
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(content);
+    a.download="project.zip";
+    a.click();
+  });
 }
 </script>
 </body>
