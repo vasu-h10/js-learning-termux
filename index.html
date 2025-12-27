@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Playground v12-lite — Beginner Mode</title>
+<title>Playground v14 — Beginner + History</title>
 
 <!-- CodeMirror Syntax Highlight -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
@@ -21,22 +21,20 @@
 body {
   margin:0; background:var(--bg); color:var(--text);
   font-family:monospace; display:flex; justify-content:center;
-  min-height:100vh; padding:10px;
+  padding:10px; min-height:100vh;
 }
 .app {
   width:100%; max-width:900px; background:var(--panel);
   border-radius:12px; padding:12px;
 }
-.file-tabs {
-  display:flex; gap:6px; margin-bottom:10px;
-}
+.file-tabs { display:flex; gap:6px; overflow-x:auto; margin-bottom:8px; }
 .file-btn {
   padding:8px 12px; background:#334155; border-radius:8px;
   cursor:pointer; flex-shrink:0;
 }
 .file-btn.active { background:var(--accent); }
 
-.buttons { display:flex; gap:6px; margin-top:10px; }
+.buttons { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
 button {
   flex:1; padding:10px; border:none; border-radius:8px;
   background:var(--accent); color:white; cursor:pointer;
@@ -45,7 +43,7 @@ button {
 .panel-tabs { display:flex; gap:6px; margin-top:10px; }
 .panel-btn {
   padding:6px 10px; background:#334155; border-radius:6px;
-  cursor:pointer;
+  cursor:pointer; flex-shrink:0;
 }
 .panel-btn.active { background:var(--accent); }
 
@@ -62,17 +60,33 @@ button {
   display:none; position:fixed; top:0; left:0;
   width:100vw; height:100vh; background:white; z-index:9999;
 }
-#previewFrame {
-  width:100%; height:calc(100vh - 50px); border:none;
+#previewFrame { width:100%; height:calc(100vh - 50px); border:none; }
+
+/* history modal */
+#historyBox {
+  display:none; position:fixed; top:0; left:0;
+  width:100vw; height:100vh; background:#000b; z-index:9999;
+  padding:10px; overflow:auto;
+}
+#historyInner {
+  background:#111; padding:10px; border-radius:10px;
+  max-width:700px; margin:auto; margin-top:30px;
+}
+.history-item {
+  padding:6px; margin:4px 0; background:#222; border-radius:6px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.history-item button {
+  padding:4px 8px; font-size:14px;
 }
 </style>
 </head>
 
 <body>
 <div class="app" id="editorArea">
-  <h2>Playground v12-lite — HTML / CSS / JS</h2>
+  <h2>Playground v14 — HTML / CSS / JS</h2>
 
-  <!-- fixed 3 files -->
+  <!-- file tabs (fixed 3 files) -->
   <div class="file-tabs">
     <div class="file-btn active" onclick="switchFile('index.html')">index.html</div>
     <div class="file-btn" onclick="switchFile('style.css')">style.css</div>
@@ -82,14 +96,15 @@ button {
   <!-- editor -->
   <textarea id="editor"></textarea>
 
-  <!-- actions -->
+  <!-- buttons -->
   <div class="buttons">
     <button onclick="runJS()">▶ Run JS</button>
     <button onclick="showPreviewFull()">🌐 Preview Full</button>
     <button onclick="showConsoleFull()">🖥 Console Full</button>
+    <button onclick="openHistory()">📜 History</button>
   </div>
 
-  <!-- bottom panels -->
+  <!-- output panels -->
   <div class="panel-tabs">
     <div class="panel-btn active" onclick="showPanel('htmlPanel')">HTML validator</div>
     <div class="panel-btn" onclick="showPanel('cssPanel')">CSS validator</div>
@@ -101,70 +116,89 @@ button {
   <div id="jsPanel" class="panel"></div>
 </div>
 
-<!-- fullscreen preview -->
+<!-- preview fullscreen -->
 <div id="previewArea">
   <button onclick="hidePreview()" style="width:100%;">🔙 Back</button>
   <iframe id="previewFrame"></iframe>
 </div>
 
-<!-- fullscreen console -->
-<div id="consoleFull"
- style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:black;color:white;z-index:9999;">
+<!-- console fullscreen -->
+<div id="consoleFull" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:black;color:white;z-index:9999;">
   <button onclick="hideConsoleFull()">🔙 Back</button>
   <pre id="consoleFullContent"></pre>
 </div>
 
-<script>
-/* ---------- fixed beginner files ---------- */
-let files={
-  "index.html":localStorage.getItem("index.html")||"<h1>Hello!</h1>",
-  "style.css":localStorage.getItem("style.css")||"body{background:white;}",
-  "script.js":localStorage.getItem("script.js")||"console.log('JS OK');"
-};
+<!-- history -->
+<div id="historyBox">
+  <div id="historyInner"></div>
+</div>
 
+<script>
+/* ---------- storage ---------- */
+let files = JSON.parse(localStorage.getItem("files_v14") || "{}");
+let historyList = JSON.parse(localStorage.getItem("history_v14") || "[]");
+
+if(Object.keys(files).length === 0){
+  files = {
+    "index.html":"<h1>Hello!</h1>",
+    "style.css":"body{background:white;}",
+    "script.js":"console.log('JS OK');"
+  };
+}
+function saveFiles(){ localStorage.setItem("files_v14", JSON.stringify(files)); }
+
+/* ---------- auto history on action ---------- */
+function makeHistory(){
+  historyList.push({
+    time:new Date().toLocaleString(),
+    snapshot:JSON.stringify(files)
+  });
+  localStorage.setItem("history_v14", JSON.stringify(historyList));
+}
+
+/* ---------- editor ---------- */
 let currentFile="index.html";
 let cmEditor;
 
-/* ---------- Editor ---------- */
 function setupEditor(){
   cmEditor=CodeMirror.fromTextArea(document.getElementById("editor"),{
-    mode:"xml", theme:"dracula", lineNumbers:true
+    mode:"xml",theme:"dracula",lineNumbers:true
   });
   cmEditor.setValue(files[currentFile]);
   cmEditor.on("change",()=>{
     files[currentFile]=cmEditor.getValue();
-    localStorage.setItem(currentFile,files[currentFile]);
+    saveFiles();
   });
 }
 setupEditor();
 
-/* ---------- switching ---------- */
 function switchFile(name){
   files[currentFile]=cmEditor.getValue();
   currentFile=name;
-  cmEditor.setOption("mode", name.endsWith(".js")?"javascript":name.endsWith(".css")?"css":"xml");
-  cmEditor.setValue(files[name]);
-
+  let mode=currentFile.endsWith(".js")?"javascript":currentFile.endsWith(".css")?"css":"xml";
+  cmEditor.setOption("mode",mode);
+  cmEditor.setValue(files[currentFile]);
   document.querySelectorAll(".file-btn").forEach(b=>b.classList.remove("active"));
   [...document.querySelectorAll(".file-btn")].find(b=>b.innerText.includes(name)).classList.add("active");
 }
 
-/* ---------- Panels ---------- */
+/* ---------- panels ---------- */
 function showPanel(id){
   document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
   document.getElementById(id).classList.add("active");
-
   document.querySelectorAll(".panel-btn").forEach(b=>b.classList.remove("active"));
   [...document.querySelectorAll(".panel-btn")].find(b=>b.innerText.toLowerCase().includes(id.substring(0,2))).classList.add("active");
 }
 
-/* ---------- Validators ---------- */
+/* ---------- validators ---------- */
 function validateHTML(){
   const p=document.getElementById("htmlPanel");
   p.innerHTML="";
-  const doc=new DOMParser().parseFromString(files["index.html"],"text/html");
+  const parser=new DOMParser();
+  const doc=parser.parseFromString(files["index.html"],"text/html");
   doc.querySelectorAll("parsererror").forEach(e=>p.innerHTML+=`<div class="error">${e.textContent}</div>`);
 }
+
 function validateCSS(){
   const p=document.getElementById("cssPanel");
   p.innerHTML="";
@@ -172,8 +206,9 @@ function validateCSS(){
   catch(e){ p.innerHTML=`<div class="error">${e.message}</div>`; }
 }
 
-/* ---------- Run JS ---------- */
+/* ---------- JS ---------- */
 function runJS(){
+  makeHistory();
   validateHTML(); validateCSS();
   const p=document.getElementById("jsPanel");
   p.innerHTML="";
@@ -183,16 +218,18 @@ function runJS(){
   }catch(e){ p.innerHTML=`<div class="error">${e.message}</div>` }
 }
 
-/* ---------- Preview ---------- */
+/* ---------- preview ---------- */
 function showPreviewFull(){
+  makeHistory();
   const frame=document.getElementById("previewFrame");
   frame.srcdoc=`
   <html><head><style>${files["style.css"]}</style></head>
   <body>${files["index.html"]}
   <script>
-  try{ ${files["script.js"]} }
-  catch(e){ document.body.innerHTML+='<pre style="color:red">'+e+'</pre>' }
-  <\/script></body></html>`;
+    try{ ${files["script.js"]} }
+    catch(e){ document.body.innerHTML+='<pre style="color:red">'+e+'</pre>' }
+  <\/script>
+  </body></html>`;
   document.getElementById("previewArea").style.display="block";
   document.getElementById("editorArea").style.display="none";
 }
@@ -201,15 +238,36 @@ function hidePreview(){
   document.getElementById("editorArea").style.display="block";
 }
 
-/* ---------- Console Full ---------- */
+/* ---------- console fullscreen ---------- */
 function showConsoleFull(){
-  const text=document.querySelector("#jsPanel").innerText;
-  document.getElementById("consoleFullContent").innerText=text;
-  document.getElementById("consoleFull").style.display="block";
+  const f=document.getElementById("consoleFull");
+  document.getElementById("consoleFullContent").innerText=document.getElementById("jsPanel").innerText;
+  f.style.display="block";
 }
-function hideConsoleFull(){
-  document.getElementById("consoleFull").style.display="none";
+function hideConsoleFull(){ document.getElementById("consoleFull").style.display="none"; }
+
+/* ---------- history UI ---------- */
+function openHistory(){
+  const div=document.getElementById("historyInner");
+  div.innerHTML="<h3>History</h3>";
+  historyList.forEach((h,i)=>{
+    div.innerHTML+=`
+      <div class="history-item">
+        <span>${h.time}</span>
+        <button onclick="restoreHistory(${i})">Restore</button>
+      </div>`;
+  });
+  document.getElementById("historyBox").style.display="block";
 }
+function restoreHistory(i){
+  files=JSON.parse(historyList[i].snapshot);
+  saveFiles();
+  cmEditor.setValue(files[currentFile]);
+  alert("Restored!");
+}
+document.getElementById("historyBox").onclick=e=>{
+  if(e.target.id==="historyBox") e.target.style.display="none";
+};
 </script>
 </body>
 </html>
