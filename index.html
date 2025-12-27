@@ -3,19 +3,20 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Playground v17 — Rename Tabs + JSX/TSX</title>
+<title>Playground v8 — Learning mode</title>
 
-<!-- JSX + TSX Support -->
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<!-- CodeMirror Syntax Highlight -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
 
 <style>
 :root {
-  --bg: #020617;
-  --panel: #020617;
-  --text: #e5e7eb;
-  --editor: #0f172a;
-  --accent: #2563eb;
-  --console-bg: #000;
+  --bg:#020617; --panel:#020617; --text:#e5e7eb;
+  --editor-bg:#0f172a; --accent:#2563eb; --console-bg:#000;
 }
 body {
   margin:0; background:var(--bg); color:var(--text);
@@ -24,239 +25,203 @@ body {
 }
 .app {
   width:100%; max-width:900px; background:var(--panel);
-  padding:12px; border-radius:12px;
+  border-radius:12px; padding:12px;
 }
-h2{margin:0;color:var(--accent);}
-
-/* tabs */
-.file-tabs{display:flex;gap:6px;margin-top:8px;overflow-x:auto;}
-.file-btn{
-  padding:8px 12px;background:#334155;border-radius:8px;
-  color:white;cursor:pointer;flex-shrink:0;user-select:none;
+.file-tabs {
+  display:flex; gap:6px; overflow-x:auto; margin-bottom:8px;
 }
-.file-btn.active{background:var(--accent);}
+.file-btn {
+  padding:8px 12px; background:#334155; border-radius:8px;
+  cursor:pointer; flex-shrink:0;
+}
+.file-btn.active { background:var(--accent); }
 
-/* editor */
-textarea{
-  width:100%; height:300px; background:var(--editor); color:#22c55e;
-  border-radius:10px; border:none; padding:12px; font-size:16px;
-  resize:none; outline:none; margin-top:10px;
+.buttons { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+button {
+  flex:1; padding:10px; border:none; border-radius:8px;
+  background:var(--accent); color:white; cursor:pointer;
 }
 
-/* buttons */
-.buttons{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
-button{
-  flex:1;padding:12px;border-radius:10px;border:none;
-  background:var(--accent);color:white;cursor:pointer;font-size:16px;
+.panel-tabs { display:flex; gap:6px; margin-top:10px; }
+.panel-btn {
+  padding:6px 10px; background:#334155; border-radius:6px;
+  cursor:pointer; flex-shrink:0;
 }
+.panel-btn.active { background:var(--accent); }
 
-/* console */
-.console{
-  background:var(--console-bg);height:200px;border-radius:10px;
-  padding:12px;overflow-y:auto;margin-top:12px;font-size:14px;
+.panel {
+  margin-top:8px; background:var(--console-bg);
+  padding:12px; border-radius:10px; height:200px;
+  overflow-y:auto; font-size:14px;
+  display:none;
 }
-.log{color:white;} .error{color:red;}
+.panel.active { display:block; }
 
-/* fullscreen console */
-#consoleFull{
-  display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
-  background:black;overflow-y:auto;z-index:9999;padding:12px;
-}
-#consoleFullContent{white-space:pre-wrap;}
+.error{color:red;} .log{color:white;}
 
-/* fullscreen preview */
-#previewArea{
-  display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
-  background:white;z-index:9999;
+#previewArea {
+  display:none; position:fixed; top:0; left:0;
+  width:100vw; height:100vh; background:white; z-index:9999;
 }
-#previewFrame{
-  width:100vw;height:calc(100vh - 55px);border:none;background:white;
-}
-@media(max-width:600px){
-  textarea{height:350px;font-size:16px;}
-  button{font-size:15px;padding:10px;}
+#previewFrame {
+  width:100vw; height:calc(100vh - 50px); border:none;
 }
 </style>
 </head>
 
 <body>
 <div class="app" id="editorArea">
-  <h2>Playground v17 — Rename Tabs</h2>
+  <h2>Playground v8 — HTML / CSS / JS</h2>
 
-  <!-- TABS -->
-  <div class="file-tabs" id="fileTabs"></div>
-
-  <textarea id="editor"></textarea>
-
-  <div class="buttons">
-    <button onclick="runCode()">▶ Run</button>
-    <button onclick="showConsole()">💬 Console</button>
-    <button onclick="showPreview()">🌍 Preview</button>
-    <button onclick="showConsoleFull()">🖥 Full Console</button>
-    <button onclick="showPreviewFull()">🌐 Full Preview</button>
-    <button onclick="clearConsole()">🧹 Clear</button>
+  <!-- file tabs -->
+  <div class="file-tabs">
+    <div class="file-btn active" onclick="switchFile('html')">index.html</div>
+    <div class="file-btn" onclick="switchFile('css')">style.css</div>
+    <div class="file-btn" onclick="switchFile('js')">script.js</div>
   </div>
 
-  <div id="console" class="console"></div>
+  <!-- editor -->
+  <textarea id="editor"></textarea>
+
+  <!-- action buttons -->
+  <div class="buttons">
+    <button onclick="showPreview()">🌍 Preview</button>
+    <button onclick="runJS()">▶ Run JS</button>
+    <button onclick="showPreviewFull()">🌐 Preview Full</button>
+    <button onclick="showConsoleFull()">🖥 Console Full</button>
+  </div>
+
+  <!-- panel selector -->
+  <div class="panel-tabs">
+    <div class="panel-btn active" onclick="showPanel('htmlPanel')">HTML validator</div>
+    <div class="panel-btn" onclick="showPanel('cssPanel')">CSS validator</div>
+    <div class="panel-btn" onclick="showPanel('jsPanel')">JS console</div>
+  </div>
+
+  <!-- output panels -->
+  <div id="htmlPanel" class="panel active"></div>
+  <div id="cssPanel" class="panel"></div>
+  <div id="jsPanel" class="panel"></div>
 </div>
 
-<!-- full preview -->
+<!-- fullscreen preview -->
 <div id="previewArea">
-  <button onclick="hidePreview()">🔙 Back</button>
+  <button onclick="hidePreview()" style="width:100%;">🔙 Back</button>
   <iframe id="previewFrame"></iframe>
 </div>
 
-<!-- full console -->
-<div id="consoleFull">
-  <button onclick="hideConsoleFull()">🔙 Back</button>
+<!-- fullscreen console -->
+<div id="consoleFull"
+ style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:black;color:white;z-index:9999;">
+  <button onclick="this.parentElement.style.display='none'">🔙 Back</button>
   <pre id="consoleFullContent"></pre>
 </div>
 
 <script>
-/* ------------------ FILE SYSTEM ------------------- */
-let files = JSON.parse(localStorage.getItem("files_v17") || "{}");
-let filenames = JSON.parse(localStorage.getItem("filenames_v17") || `
-  ["index.html","style.css","script.js","app.jsx","app.tsx"]
-`);
+/* ---------- storage ---------- */
+let files = {
+  html: localStorage.getItem("html") || "<h1>Hello!</h1>",
+  css: localStorage.getItem("css") || "body{background:white;}",
+  js: localStorage.getItem("js") || "console.log('JS OK');"
+};
 
-function saveFS(){
-  localStorage.setItem("files_v17", JSON.stringify(files));
-  localStorage.setItem("filenames_v17", JSON.stringify(filenames));
+let ext = "html";
+let cmEditor;
+
+/* ---------- setup editor ---------- */
+function setupEditor(){
+  cmEditor = CodeMirror.fromTextArea(document.getElementById("editor"),{
+    mode:"xml", theme:"dracula", lineNumbers:true
+  });
+  cmEditor.setValue(files[ext]);
+  cmEditor.on("change",()=>{
+    files[ext]=cmEditor.getValue();
+    localStorage.setItem(ext, files[ext]);
+  });
+}
+setupEditor();
+
+/* ---------- switching files ---------- */
+function switchFile(type){
+  files[ext]=cmEditor.getValue();
+  ext=type;
+  let mode = ext==="js"?"javascript":ext==="css"?"css":"xml";
+  cmEditor.setOption("mode",mode);
+  cmEditor.setValue(files[ext]);
+  document.querySelectorAll(".file-btn").forEach(b=>b.classList.remove("active"));
+  [...document.querySelectorAll(".file-btn")].find(b=>b.innerText.includes(ext)).classList.add("active");
 }
 
-let selected = filenames[0];
-const editor = document.getElementById("editor");
-const consoleBox = document.getElementById("console");
-const fileTabs = document.getElementById("fileTabs");
-
-/* -------- INITIAL CONTENT IF NEW -------- */
-function ensureDefaults(){
-  let defaults = {
-    "index.html":"<h1>Hello!</h1>",
-    "style.css":"h1{color:green}",
-    "script.js":"console.log('JS OK')",
-    "app.jsx":"function App(){return <h2>Hello JSX</h2>} App();",
-    "app.tsx":"function App():any{return <h2>Hello TSX</h2>} App();",
-  };
-  for(let f of filenames){
-    if(!files[f]) files[f] = defaults[f] || "";
-  }
-}
-ensureDefaults(); saveFS();
-
-/* ------------------ RENDER TABS ------------------- */
-function renderTabs(){
-  fileTabs.innerHTML = filenames.map(name =>
-    `<div class="file-btn ${name===selected?"active":""}"
-      onclick="switchFile('${name}')"
-      ondblclick="renameFilePrompt('${name}')">
-      ${name}
-    </div>`
-  ).join("");
-}
-renderTabs();
-
-/* ------------------ SWITCH FILE ------------------- */
-function switchFile(name){
-  files[selected] = editor.value;
-  selected = name;
-  editor.value = files[name];
-  renderTabs(); saveFS();
+/* ---------- panels ---------- */
+function showPanel(id){
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  document.querySelectorAll(".panel-btn").forEach(b=>b.classList.remove("active"));
+  [...document.querySelectorAll(".panel-btn")].find(b=>b.innerText.toLowerCase().includes(id.substring(0,2))).classList.add("active");
 }
 
-/* ----------------- RENAME FILE ------------------- */
-function renameFilePrompt(oldName){
-  let newName = prompt("Rename file (with extension):", oldName);
-  if(!newName || newName.trim()=="" || newName===oldName) return;
-  if(filenames.includes(newName)){
-    alert("Name already exists!");
-    return;
-  }
-
-  // move content + rename
-  files[newName] = files[oldName];
-  delete files[oldName];
-
-  filenames = filenames.map(f => f===oldName ? newName : f );
-  selected = newName;
-
-  renderTabs(); editor.value = files[newName];
-  saveFS();
+/* ---------- validators ---------- */
+function validateHTML(){
+  const p=document.getElementById("htmlPanel");
+  p.innerHTML="";
+  const parser=new DOMParser();
+  const doc=parser.parseFromString(files.html,"text/html");
+  let errors=doc.querySelectorAll("parsererror");
+  errors.forEach(e=>p.innerHTML+=`<div class="error">${e.textContent}</div>`);
 }
 
-/* ---------------- CONSOLE ---------------- */
-function clearConsole(){ consoleBox.innerHTML=""; }
-function logConsole(m){ consoleBox.innerHTML+=`<div class="log">${m}</div>`; }
-function showConsole(){ window.scrollTo(0,document.body.scrollHeight); }
-
-/* fullscreen console */
-function showConsoleFull(){
-  consoleFull.style.display="block";
-  consoleFullContent.innerText = consoleBox.innerText;
-}
-function hideConsoleFull(){ consoleFull.style.display="none"; }
-
-/* ---------------- RUN CODE ---------------- */
-function runCode(){
-  clearConsole();
-
-  // detect current extension to transform if jsx/tsx
-  let code = files[selected];
-  if(selected.endsWith(".jsx") || selected.endsWith(".tsx")){
-    try{
-      let presets = ["react"];
-      if(selected.endsWith(".tsx")) presets.push("typescript");
-      code = Babel.transform(code, {presets}).code;
-    }catch(e){ return logConsole("JSX/TSX Error: "+e.message); }
-  }
-
+function validateCSS(){
+  const p=document.getElementById("cssPanel");
+  p.innerHTML="";
   try{
-    let r = eval(code);
-    if(r!==undefined) logConsole("> "+r);
-  }catch(e){ logConsole("JS Error: "+e.message); }
-}
-
-/* ---------------- PREVIEW ---------------- */
-function generatePreview(){
-  let html="",css="",js="";
-  for(let n of filenames){
-    if(n.endsWith(".html")) html+=files[n];
-    if(n.endsWith(".css")) css+=files[n];
-    if(n.endsWith(".js")) js+=files[n];
-    if(n.endsWith(".jsx")){
-      try{ js+="\n"+Babel.transform(files[n],{presets:["react"]}).code; }catch(e){}
-    }
-    if(n.endsWith(".tsx")){
-      try{ js+="\n"+Babel.transform(files[n],{presets:["react","typescript"]}).code; }catch(e){}
-    }
+    new CSSStyleSheet().replaceSync(files.css);
+  }catch(e){
+    p.innerHTML=`<div class="error">${e.message}</div>`;
   }
-
-  return `
-  <html>
-    <head><style>${css}</style></head>
-    <body>${html}
-      <script>
-        try{${js}}
-        catch(e){document.body.innerHTML+='<pre style="color:red">'+e+'</pre>'}
-      <\/script>
-    </body>
-  </html>`;
 }
 
-function showPreview(){ previewFrame.srcdoc = generatePreview(); }
+/* ---------- JS run ---------- */
+function runJS(){
+  validateHTML(); validateCSS();
+  const p=document.getElementById("jsPanel");
+  p.innerHTML="";
+  try{
+    let r=eval(files.js);
+    if(r!==undefined) p.innerHTML+=`<div class="log">${r}</div>`;
+  }catch(e){ p.innerHTML=`<div class="error">${e.message}</div>` }
+}
+
+/* ---------- preview ---------- */
+function showPreview(){
+  const frame=document.getElementById("previewFrame");
+  frame.srcdoc = `
+  <html><head><style>${files.css}</style></head>
+  <body>${files.html}
+  <script>
+  try{ ${files.js} }
+  catch(e){ document.body.innerHTML+='<pre style="color:red">'+e+'</pre>' }
+  <\/script>
+  </body></html>`;
+}
+
 function showPreviewFull(){
-  previewArea.style.display="block";
-  editorArea.style.display="none";
-  previewFrame.srcdoc = generatePreview();
+  showPreview();
+  document.getElementById("previewArea").style.display="block";
+  document.getElementById("editorArea").style.display="none";
 }
+
 function hidePreview(){
-  previewArea.style.display="none";
-  editorArea.style.display="block";
+  document.getElementById("previewArea").style.display="none";
+  document.getElementById("editorArea").style.display="block";
 }
 
-/* load first file */
-editor.value = files[selected];
-
+/* ---------- fullscreen console ---------- */
+function showConsoleFull(){
+  const full=document.getElementById("consoleFull");
+  const text=document.querySelector("#jsPanel").innerText;
+  document.getElementById("consoleFullContent").innerText=text;
+  full.style.display="block";
+}
 </script>
 </body>
 </html>
