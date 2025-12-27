@@ -3,228 +3,268 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Playground v3</title>
+<title>Playground v5 — JSX + TSX</title>
+
+<!-- React runtime for JSX rendering -->
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+<!-- Babel to compile JSX & TSX -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
 <style>
-:root {
-  --bg: #020617;
-  --panel: #020617;
-  --text: #e5e7eb;
-  --editor: #0f172a;
-  --accent: #2563eb;
-  --console-bg: #000;
+:root{
+  --bg:#020617; --panel:#020617; --text:#fff;
+  --editor:#0f172a; --accent:#2563eb; --console-bg:#000;
+}
+body{
+  margin:0;padding:10px;background:var(--bg);color:var(--text);
+  font-family:monospace;display:flex;justify-content:center;
+  align-items:center;min-height:100vh;
+}
+.app{width:100%;max-width:900px;background:var(--panel);
+  padding:10px;border-radius:12px;}
+header{display:flex;justify-content:space-between;align-items:center;}
+h2{margin:0;font-size:20px;color:var(--accent);}
+
+/* file tabs */
+#fileTabs{display:flex;overflow-x:auto;gap:6px;margin-top:10px;}
+#fileTabs button{
+  flex:none;padding:6px 14px;border:none;border-radius:8px;
+  background:#334155;color:white;cursor:pointer;
+}
+#fileTabs button.active{background:var(--accent);}
+
+/* editor */
+textarea{
+  width:100%;height:260px;margin-top:10px;padding:10px;
+  border:none;border-radius:10px;background:var(--editor);
+  color:#22c55e;resize:none;outline:none;font-size:15px;
 }
 
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: monospace;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 10px;
-  min-height: 100vh;
+/* buttons */
+.buttons{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.buttons button{
+  flex:1;padding:10px;border:none;border-radius:10px;
+  background:var(--accent);color:white;font-size:15px;
 }
 
-.app {
-  width: 100%;
-  max-width: 900px;
-  background: var(--panel);
-  padding: 10px;
-  border-radius: 12px;
-}
-
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-select {
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
-  margin-top: 10px;
-  background: #334155;
-  color: var(--text);
-  border: none;
-  font-size: 16px;
-}
-
-textarea {
-  width: 100%;
-  height: 280px;
-  border-radius: 10px;
-  margin-top: 10px;
-  padding: 10px;
-  font-size: 15px;
-  background: var(--editor);
-  color: #22c55e;
-  resize: none;
-  outline: none;
-}
-
-.buttons {
-  margin-top: 10px;
-  display: flex;
-  gap: 8px;
-}
-
-.buttons button, #previewBtn, #backBtn {
-  flex: 1;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  background: var(--accent);
-  color: white;
-  cursor: pointer;
-  font-size: 16px;
-}
-
-.console {
-  background: var(--console-bg);
-  height: 200px;
-  border-radius: 10px;
-  padding: 10px;
-  overflow-y: auto;
-  margin-top: 10px;
-  font-size: 14px;
-}
-
-#previewArea {
+/* panels */
+.panel{
+  background:var(--console-bg);margin-top:10px;border-radius:10px;
+  padding:10px;height:220px;overflow-y:auto;font-size:14px;
   display:none;
-  width:100%;
-  height:100vh;
-  background:white;
-  position:fixed;
-  top:0;
-  left:0;
-  z-index:9999;
 }
+.log{color:white;} .error{color:red;}
 
-.error { color:red; }
-.log { color:white; }
+/* fullscreen viewers */
+.fullscreen{
+  display:none;position:fixed;top:0;left:0;width:100%;height:100vh;
+  background:var(--panel);z-index:9999;padding:5px;
+}
+.fullscreen iframe,.fullscreen pre{
+  width:100%;height:calc(100vh - 50px);border:none;
+}
+.fullscreen button{
+  width:100%;padding:14px;border:none;border-radius:0;
+  background:var(--accent);color:white;font-size:16px;
+}
 </style>
 </head>
-
 <body>
+
 <div class="app" id="editorArea">
-  <header>
-    <h2>Playground v3</h2>
-  </header>
+  <header><h2>Playground v5 — JSX + TSX</h2></header>
 
-  <select id="fileSelect" onchange="switchFile()">
-    <option value="html">index.html</option>
-    <option value="css">style.css</option>
-    <option value="js">script.js</option>
-  </select>
+  <!-- file switching -->
+  <div id="fileTabs"></div>
 
+  <!-- editor -->
   <textarea id="editor"></textarea>
 
+  <!-- main controls -->
   <div class="buttons">
-    <button onclick="runCode()">▶ Run</button>
+    <button onclick="runAll()">▶ Run</button>
+    <button onclick="toggleConsole()">💬 Console</button>
+    <button onclick="togglePreview()">🌐 Preview</button>
+    <button onclick="consoleFull()">🖥 Full Console</button>
+    <button onclick="previewFull()">🌍 Full Preview</button>
     <button onclick="clearConsole()">🧹 Clear</button>
   </div>
 
-  <div id="console" class="console"></div>
-
-  <button id="previewBtn" onclick="showPreview()">🌐 Preview Full Screen</button>
+  <!-- bottom console + preview -->
+  <div id="consolePanel" class="panel"></div>
+  <iframe id="previewPanel" class="panel"></iframe>
 </div>
 
-<div id="previewArea">
-  <button id="backBtn" onclick="hidePreview()" style="width:100%;border-radius:0;">🔙 Back to Editor</button>
-  <iframe id="iframe" style="width:100%;height:calc(100vh - 50px);border:none;"></iframe>
+<!-- fullscreen console -->
+<div id="consoleFS" class="fullscreen">
+  <button onclick="exitConsoleFull()">🔙 Back to Editor</button>
+  <pre id="consoleFSBody" style="color:white;padding:10px;"></pre>
+</div>
+
+<!-- fullscreen preview -->
+<div id="previewFS" class="fullscreen">
+  <button onclick="exitPreviewFull()">🔙 Back to Editor</button>
+  <iframe id="previewFSBody"></iframe>
 </div>
 
 <script>
-let files = {
-  html: localStorage.getItem("html") || "<h1>Hello Playground</h1>",
-  css:  localStorage.getItem("css")  || "h1{color:green;}",
-  js:   localStorage.getItem("js")   || "console.log('JS OK');"
+/* ===== FILES ===== */
+let files={
+ "index.html":localStorage.getItem("index.html")||"<div id='root'></div>",
+ "style.css": localStorage.getItem("style.css")||"body{background:#fff;color:#000;}",
+ "script.js": localStorage.getItem("script.js")||"console.log('JS loaded');",
+ "app.jsx":   localStorage.getItem("app.jsx")||"const el=<h1>Hello JSX</h1>;console.log(el.type);",
+ "app.tsx":   localStorage.getItem("app.tsx")||"function add(a:number,b:number){return a+b;}console.log(add(2,3));"
 };
+const extensions=Object.keys(files);
+let currentFile="index.html";
 
-const editor = document.getElementById("editor");
-const consoleBox = document.getElementById("console");
-const fileSelect = document.getElementById("fileSelect");
+const editor=document.getElementById("editor");
+const consolePanel=document.getElementById("consolePanel");
+const previewPanel=document.getElementById("previewPanel");
 
-function switchFile(){
-  files[fileSelect.value] = editor.value;
-  editor.value = files[fileSelect.value];
-}
-editor.value = files[fileSelect.value];
-
-editor.addEventListener("input",()=>{
-  files[fileSelect.value] = editor.value;
-  localStorage.setItem(fileSelect.value, editor.value);
-});
-
-function clearConsole(){
-  consoleBox.innerHTML="";
-}
-
-/* 🔍 detect CSS errors */
-function validateCSS(css){
-  try{
-    const sheet = new CSSStyleSheet();
-    sheet.replaceSync(css);
-  }catch(e){
-    consoleBox.innerHTML += `<div class="error">CSS Error: ${e.message}</div>`;
-  }
-}
-
-/* 🔍 detect HTML issues */
-function validateHTML(html){
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, "text/html");
-  const errors = doc.querySelectorAll("parsererror");
-  errors.forEach(e=>{
-    consoleBox.innerHTML += `<div class="error">HTML Error: ${e.textContent}</div>`;
+/* ===== FILE TAB UI ===== */
+function loadTabs(){
+  const wrap=document.getElementById("fileTabs");
+  wrap.innerHTML="";
+  extensions.forEach(name=>{
+    const b=document.createElement("button");
+    b.textContent=name;
+    if(name===currentFile)b.classList.add("active");
+    b.onclick=()=>switchFile(name);
+    wrap.appendChild(b);
   });
 }
 
-/* 🧠 Run JS with try-catch */
-function runCode(){
-  clearConsole();
-  validateHTML(files.html);
-  validateCSS(files.css);
+/* ===== LOAD FILE ===== */
+function switchFile(name){
+  files[currentFile]=editor.value;
+  currentFile=name;
+  editor.value=files[name];
+  localStorage.setItem(name,files[name]);
+  loadTabs();
+}
+loadTabs();
+editor.value=files[currentFile];
 
+editor.addEventListener("input",()=>{
+  files[currentFile]=editor.value;
+  localStorage.setItem(currentFile,editor.value);
+});
+
+/* ===== VALIDATORS ===== */
+function clearConsole(){consolePanel.innerHTML="";}
+function validateHTML(html){
+ const parser=new DOMParser();
+ const doc=parser.parseFromString(html,"text/html");
+ const err=doc.querySelectorAll("parsererror");
+ err.forEach(e=>consolePanel.innerHTML+=`<div class='error'>${e.textContent}</div>`);
+}
+function validateCSS(css){
+ try{new CSSStyleSheet().replaceSync(css);}
+ catch(e){consolePanel.innerHTML+=`<div class='error'>${e.message}</div>`;}
+}
+
+/* ===== JSX & TSX COMPILER ===== */
+function transpile(code,name){
   try{
-    const result = eval(files.js);
-    if(result!==undefined){
-      consoleBox.innerHTML += `<div class="log">&gt; ${result}</div>`;
+    if(name.endsWith(".jsx")||name.endsWith(".tsx")){
+      return Babel.transform(code,{presets:["react","typescript"]}).code;
     }
+    return code;
   }catch(e){
-    consoleBox.innerHTML += `<div class="error">JS Error: ${e.message}</div>`;
+    consolePanel.innerHTML+=`<div class='error'>Transpile: ${e.message}</div>`;
+    return "";
   }
 }
 
-/* 🌐 Preview combine auto */
-function showPreview(){
-  files[fileSelect.value]=editor.value;
-  const iframe = document.getElementById("iframe");
-  const doc = iframe.contentDocument || iframe.contentWindow.document;
+/* ===== RUN EVERYTHING ===== */
+function runAll(){
+  clearConsole();
+  validateHTML(files["index.html"]);
+  validateCSS(files["style.css"]);
+
+  const js = transpile(files["script.js"],"script.js");
+  const jsx= transpile(files["app.jsx"],"app.jsx");
+  const tsx= transpile(files["app.tsx"],"app.tsx");
+
+  const full = js+"\n"+jsx+"\n"+tsx;
+
+  try{
+    const result=eval(full);
+    if(result!==undefined)
+      consolePanel.innerHTML+=`<div class='log'>${result}</div>`;
+  }catch(e){
+    consolePanel.innerHTML+=`<div class='error'>Run Error: ${e.message}</div>`;
+  }
+}
+
+/* ===== BOTTOM CONSOLE ===== */
+function toggleConsole(){
+  consolePanel.style.display =
+    consolePanel.style.display==="block"?"none":"block";
+}
+
+/* ===== BOTTOM PREVIEW ===== */
+function togglePreview(){
+  runAll();
+  previewPanel.style.display =
+    previewPanel.style.display==="block"?"none":"block";
+
+  const doc=previewPanel.contentDocument;
+  const fullJS = transpile(files["script.js"],"script.js")+
+                 transpile(files["app.jsx"],"app.jsx")+
+                 transpile(files["app.tsx"],"app.tsx");
 
   doc.open();
   doc.write(`
-    <html>
-      <head><style>${files.css}</style></head>
-      <body>${files.html}
-      <script>
-        try{ ${files.js} }
-        catch(e){ document.body.innerHTML += '<pre style="color:red">'+e+'</pre>' }
-      <\/script>
-      </body>
-    </html>
+    <html><head>
+    <style>${files["style.css"]}</style>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    </head><body>${files["index.html"]}
+    <script>${fullJS}<\/script></body></html>
   `);
   doc.close();
-  document.getElementById("previewArea").style.display="block";
-  document.getElementById("editorArea").style.display="none";
 }
 
-/* 🔙 Back */
-function hidePreview(){
-  document.getElementById("previewArea").style.display="none";
+/* ===== FULLSCREEN CONSOLE ===== */
+function consoleFull(){
+  document.getElementById("consoleFS").style.display="block";
+  document.getElementById("consoleFSBody").textContent=consolePanel.textContent;
+  document.getElementById("editorArea").style.display="none";
+}
+function exitConsoleFull(){
+  document.getElementById("consoleFS").style.display="none";
+  document.getElementById("editorArea").style.display="block";
+}
+
+/* ===== FULLSCREEN PREVIEW ===== */
+function previewFull(){
+  runAll();
+  document.getElementById("previewFS").style.display="block";
+  const doc=document.getElementById("previewFSBody").contentDocument;
+  const fullJS = transpile(files["script.js"],"script.js")+
+                 transpile(files["app.jsx"],"app.jsx")+
+                 transpile(files["app.tsx"],"app.tsx");
+
+  doc.open();
+  doc.write(`
+  <html><head>
+  <style>${files["style.css"]}</style>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  </head><body>${files["index.html"]}
+  <script>${fullJS}<\/script>
+  </body></html>
+  `);
+  doc.close();
+  document.getElementById("editorArea").style.display="none";
+}
+function exitPreviewFull(){
+  document.getElementById("previewFS").style.display="none";
   document.getElementById("editorArea").style.display="block";
 }
 </script>
