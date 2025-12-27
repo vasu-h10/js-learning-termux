@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Playground v18 — Beginner Editor</title>
+<title>Playground v19 — Beginner Editor</title>
 
 <!-- Prism for syntax highlight -->
 <link id="prismTheme" rel="stylesheet"
@@ -52,10 +52,8 @@ h2{margin-top:0;color:var(--accent)}
   white-space:pre; font-size:15px;
 }
 
-/* theme change for editor */
-body.light #editorBox{
-  background:#e2e8f0;color:#111;
-}
+/* theme change */
+body.light #editorBox{background:#e2e8f0;color:#111}
 
 .buttons{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
 button{
@@ -63,22 +61,13 @@ button{
   background:var(--accent);color:white;cursor:pointer
 }
 
-.panel-tabs{display:flex;gap:6px;margin-top:10px}
-.panel-btn{
-  padding:6px 10px;background:#334155;border-radius:6px;
-  cursor:pointer;color:white
-}
-.panel-btn.active{background:var(--accent)}
-
 .panel{
   background:var(--console-bg);margin-top:8px;padding:12px;
   border-radius:10px;height:200px;overflow-y:auto;font-size:14px;
-  display:none;white-space:pre-wrap;
+  white-space:pre-wrap;
 }
-.panel.active{display:block}
-
-#errorText{color:red}
 .log{color:var(--text)}
+.error{color:red}
 
 #previewArea{
   display:none;position:fixed;top:0;left:0;
@@ -110,7 +99,7 @@ button{
 <body>
 
 <div class="app" id="editorArea">
-<h2>Playground v18 — HTML / CSS / JS</h2>
+<h2>Playground v19 — HTML / CSS / JS</h2>
 
 <!-- fixed beginner files -->
 <div class="file-tabs">
@@ -119,8 +108,7 @@ button{
   <div class="file-btn" onclick="switchFile('script.js')">script.js</div>
 </div>
 
-<!-- editor textarea -->
-<textarea id="rawEditor" style="display:none"></textarea>
+<!-- editor -->
 <div id="editorBox" contenteditable="true"></div>
 
 <div class="buttons">
@@ -132,13 +120,8 @@ button{
   <button onclick="downloadZip()">📦 Download ZIP</button>
 </div>
 
-<div class="panel-tabs">
-  <div class="panel-btn active" onclick="showJSPanel()">JS console</div>
+<div id="jsPanel" class="panel"></div>
 </div>
-
-<div id="jsPanel" class="panel active"></div>
-</div>
-
 
 <!-- Full preview -->
 <div id="previewArea">
@@ -157,8 +140,8 @@ button{
 
 <script>
 /* ---- storage ---- */
-let files = JSON.parse(localStorage.getItem("files_v18") || "{}");
-let historyList = JSON.parse(localStorage.getItem("hist_v18") || "[]");
+let files = JSON.parse(localStorage.getItem("files_v19") || "{}");
+let historyList = JSON.parse(localStorage.getItem("hist_v19") || "[]");
 
 if(Object.keys(files).length===0){
   files={
@@ -167,16 +150,16 @@ if(Object.keys(files).length===0){
     "script.js":"console.log('Learning JavaScript!')"
   };
 }
-function saveFiles(){localStorage.setItem("files_v18",JSON.stringify(files))}
-function saveHistory(){localStorage.setItem("hist_v18",JSON.stringify(historyList))}
+function saveFiles(){localStorage.setItem("files_v19",JSON.stringify(files))}
+function saveHistory(){localStorage.setItem("hist_v19",JSON.stringify(historyList))}
 
 let current="index.html";
 const box=document.getElementById("editorBox");
 
-/* ---- load file into editor ---- */
+/* ---- load file ---- */
 function loadFile(){
   box.innerText = files[current];
-  Prism.highlightElement(box);
+  Prism.highlightAll();
 }
 loadFile();
 
@@ -190,22 +173,35 @@ function switchFile(name){
   [...document.querySelectorAll(".file-btn")].find(b=>b.innerText.includes(name)).classList.add("active");
 }
 
-/* ---- JS console ---- */
-function showJSPanel(){
-  document.getElementById("jsPanel").classList.add("active");
-}
+/* -------- Console Redirect -------- */
+(function redirectConsole(){
+  const panel=document.getElementById("jsPanel");
+
+  console.log = (...msg)=>{
+    panel.innerHTML += `<div class="log">${msg.join(" ")}</div>`;
+  }
+
+  console.error = (msg)=>{
+    panel.innerHTML += `<div class="error">${msg}</div>`;
+  }
+
+  window.onerror = (msg)=>{
+    panel.innerHTML += `<div class="error">${msg}</div>`;
+  }
+})();
 
 /* ---- Run JS ---- */
 function runJS(){
-  historyList.push({t:new Date().toLocaleString(),snap:JSON.stringify(files)});
-  saveHistory();
   const panel=document.getElementById("jsPanel");
   panel.innerHTML="";
+
+  historyList.push({t:new Date().toLocaleString(),snap:JSON.stringify(files)});
+  saveHistory();
+
   try{
-    const out=eval(files["script.js"]);
-    if(out!==undefined) panel.innerHTML+=`<div class="log">${out}</div>`;
+    eval(files["script.js"]);
   }catch(e){
-    panel.innerHTML+=`<div class="log" style="color:red">${e.message}</div>`;
+    console.error(e.message);
   }
 }
 
@@ -216,7 +212,10 @@ function showPreviewFull(){
     <html>
     <head><style>${files["style.css"]}</style></head>
     <body>${files["index.html"]}
-    <script>try{${files["script.js"]}}catch(e){document.body.innerHTML+='<pre style="color:red">'+e+'</pre>'}<\/script>
+    <script>
+      try{${files["script.js"]}}
+      catch(e){document.body.innerHTML += '<pre style="color:red">'+e+'</pre>'}
+    <\/script>
     </body></html>`;
   document.getElementById("previewArea").style.display="block";
   document.getElementById("editorArea").style.display="none";
@@ -226,7 +225,7 @@ function hidePreview(){
   document.getElementById("editorArea").style.display="block";
 }
 
-/* ---- Full console ---- */
+/* ---- Full console copy ---- */
 function showConsoleFull(){
   document.getElementById("consoleFullContent").innerText =
     document.getElementById("jsPanel").innerText;
@@ -251,15 +250,13 @@ function openHistory(){
 }
 function restoreHistory(i){
   files=JSON.parse(historyList[i].snap);
-  saveFiles();
-  loadFile();
-  alert("Restored!");
+  saveFiles(); loadFile(); alert("Restored!");
 }
 document.getElementById("historyBox").onclick=e=>{
   if(e.target.id==="historyBox")e.target.style.display="none";
 };
 
-/* ---- Download ZIP ---- */
+/* ---- ZIP ---- */
 function downloadZip(){
   let zip=new JSZip();
   Object.keys(files).forEach(n=>zip.file(n,files[n]));
