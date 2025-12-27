@@ -1,1 +1,262 @@
-(paste full code here)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Playground v17 — Rename Tabs + JSX/TSX</title>
+
+<!-- JSX + TSX Support -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<style>
+:root {
+  --bg: #020617;
+  --panel: #020617;
+  --text: #e5e7eb;
+  --editor: #0f172a;
+  --accent: #2563eb;
+  --console-bg: #000;
+}
+body {
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:monospace; display:flex; justify-content:center;
+  padding:10px; min-height:100vh;
+}
+.app {
+  width:100%; max-width:900px; background:var(--panel);
+  padding:12px; border-radius:12px;
+}
+h2{margin:0;color:var(--accent);}
+
+/* tabs */
+.file-tabs{display:flex;gap:6px;margin-top:8px;overflow-x:auto;}
+.file-btn{
+  padding:8px 12px;background:#334155;border-radius:8px;
+  color:white;cursor:pointer;flex-shrink:0;user-select:none;
+}
+.file-btn.active{background:var(--accent);}
+
+/* editor */
+textarea{
+  width:100%; height:300px; background:var(--editor); color:#22c55e;
+  border-radius:10px; border:none; padding:12px; font-size:16px;
+  resize:none; outline:none; margin-top:10px;
+}
+
+/* buttons */
+.buttons{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+button{
+  flex:1;padding:12px;border-radius:10px;border:none;
+  background:var(--accent);color:white;cursor:pointer;font-size:16px;
+}
+
+/* console */
+.console{
+  background:var(--console-bg);height:200px;border-radius:10px;
+  padding:12px;overflow-y:auto;margin-top:12px;font-size:14px;
+}
+.log{color:white;} .error{color:red;}
+
+/* fullscreen console */
+#consoleFull{
+  display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+  background:black;overflow-y:auto;z-index:9999;padding:12px;
+}
+#consoleFullContent{white-space:pre-wrap;}
+
+/* fullscreen preview */
+#previewArea{
+  display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+  background:white;z-index:9999;
+}
+#previewFrame{
+  width:100vw;height:calc(100vh - 55px);border:none;background:white;
+}
+@media(max-width:600px){
+  textarea{height:350px;font-size:16px;}
+  button{font-size:15px;padding:10px;}
+}
+</style>
+</head>
+
+<body>
+<div class="app" id="editorArea">
+  <h2>Playground v17 — Rename Tabs</h2>
+
+  <!-- TABS -->
+  <div class="file-tabs" id="fileTabs"></div>
+
+  <textarea id="editor"></textarea>
+
+  <div class="buttons">
+    <button onclick="runCode()">▶ Run</button>
+    <button onclick="showConsole()">💬 Console</button>
+    <button onclick="showPreview()">🌍 Preview</button>
+    <button onclick="showConsoleFull()">🖥 Full Console</button>
+    <button onclick="showPreviewFull()">🌐 Full Preview</button>
+    <button onclick="clearConsole()">🧹 Clear</button>
+  </div>
+
+  <div id="console" class="console"></div>
+</div>
+
+<!-- full preview -->
+<div id="previewArea">
+  <button onclick="hidePreview()">🔙 Back</button>
+  <iframe id="previewFrame"></iframe>
+</div>
+
+<!-- full console -->
+<div id="consoleFull">
+  <button onclick="hideConsoleFull()">🔙 Back</button>
+  <pre id="consoleFullContent"></pre>
+</div>
+
+<script>
+/* ------------------ FILE SYSTEM ------------------- */
+let files = JSON.parse(localStorage.getItem("files_v17") || "{}");
+let filenames = JSON.parse(localStorage.getItem("filenames_v17") || `
+  ["index.html","style.css","script.js","app.jsx","app.tsx"]
+`);
+
+function saveFS(){
+  localStorage.setItem("files_v17", JSON.stringify(files));
+  localStorage.setItem("filenames_v17", JSON.stringify(filenames));
+}
+
+let selected = filenames[0];
+const editor = document.getElementById("editor");
+const consoleBox = document.getElementById("console");
+const fileTabs = document.getElementById("fileTabs");
+
+/* -------- INITIAL CONTENT IF NEW -------- */
+function ensureDefaults(){
+  let defaults = {
+    "index.html":"<h1>Hello!</h1>",
+    "style.css":"h1{color:green}",
+    "script.js":"console.log('JS OK')",
+    "app.jsx":"function App(){return <h2>Hello JSX</h2>} App();",
+    "app.tsx":"function App():any{return <h2>Hello TSX</h2>} App();",
+  };
+  for(let f of filenames){
+    if(!files[f]) files[f] = defaults[f] || "";
+  }
+}
+ensureDefaults(); saveFS();
+
+/* ------------------ RENDER TABS ------------------- */
+function renderTabs(){
+  fileTabs.innerHTML = filenames.map(name =>
+    `<div class="file-btn ${name===selected?"active":""}"
+      onclick="switchFile('${name}')"
+      ondblclick="renameFilePrompt('${name}')">
+      ${name}
+    </div>`
+  ).join("");
+}
+renderTabs();
+
+/* ------------------ SWITCH FILE ------------------- */
+function switchFile(name){
+  files[selected] = editor.value;
+  selected = name;
+  editor.value = files[name];
+  renderTabs(); saveFS();
+}
+
+/* ----------------- RENAME FILE ------------------- */
+function renameFilePrompt(oldName){
+  let newName = prompt("Rename file (with extension):", oldName);
+  if(!newName || newName.trim()=="" || newName===oldName) return;
+  if(filenames.includes(newName)){
+    alert("Name already exists!");
+    return;
+  }
+
+  // move content + rename
+  files[newName] = files[oldName];
+  delete files[oldName];
+
+  filenames = filenames.map(f => f===oldName ? newName : f );
+  selected = newName;
+
+  renderTabs(); editor.value = files[newName];
+  saveFS();
+}
+
+/* ---------------- CONSOLE ---------------- */
+function clearConsole(){ consoleBox.innerHTML=""; }
+function logConsole(m){ consoleBox.innerHTML+=`<div class="log">${m}</div>`; }
+function showConsole(){ window.scrollTo(0,document.body.scrollHeight); }
+
+/* fullscreen console */
+function showConsoleFull(){
+  consoleFull.style.display="block";
+  consoleFullContent.innerText = consoleBox.innerText;
+}
+function hideConsoleFull(){ consoleFull.style.display="none"; }
+
+/* ---------------- RUN CODE ---------------- */
+function runCode(){
+  clearConsole();
+
+  // detect current extension to transform if jsx/tsx
+  let code = files[selected];
+  if(selected.endsWith(".jsx") || selected.endsWith(".tsx")){
+    try{
+      let presets = ["react"];
+      if(selected.endsWith(".tsx")) presets.push("typescript");
+      code = Babel.transform(code, {presets}).code;
+    }catch(e){ return logConsole("JSX/TSX Error: "+e.message); }
+  }
+
+  try{
+    let r = eval(code);
+    if(r!==undefined) logConsole("> "+r);
+  }catch(e){ logConsole("JS Error: "+e.message); }
+}
+
+/* ---------------- PREVIEW ---------------- */
+function generatePreview(){
+  let html="",css="",js="";
+  for(let n of filenames){
+    if(n.endsWith(".html")) html+=files[n];
+    if(n.endsWith(".css")) css+=files[n];
+    if(n.endsWith(".js")) js+=files[n];
+    if(n.endsWith(".jsx")){
+      try{ js+="\n"+Babel.transform(files[n],{presets:["react"]}).code; }catch(e){}
+    }
+    if(n.endsWith(".tsx")){
+      try{ js+="\n"+Babel.transform(files[n],{presets:["react","typescript"]}).code; }catch(e){}
+    }
+  }
+
+  return `
+  <html>
+    <head><style>${css}</style></head>
+    <body>${html}
+      <script>
+        try{${js}}
+        catch(e){document.body.innerHTML+='<pre style="color:red">'+e+'</pre>'}
+      <\/script>
+    </body>
+  </html>`;
+}
+
+function showPreview(){ previewFrame.srcdoc = generatePreview(); }
+function showPreviewFull(){
+  previewArea.style.display="block";
+  editorArea.style.display="none";
+  previewFrame.srcdoc = generatePreview();
+}
+function hidePreview(){
+  previewArea.style.display="none";
+  editorArea.style.display="block";
+}
+
+/* load first file */
+editor.value = files[selected];
+
+</script>
+</body>
+</html>
