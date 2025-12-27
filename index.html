@@ -3,151 +3,109 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Playground v6 — Android First + JSX + TSX</title>
+<title>Playground V13 — CodeMirror + JSX/TSX + Fullscreen</title>
 
-<!-- JSX + TSX support -->
+<!-- ✨ CodeMirror 6 (editor) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.css" />
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.js"></script>
+
+<!-- 🔍 Syntax modes -->
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/javascript/javascript.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/xml/xml.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/css/css.js"></script>
+
+<!-- 🎨 Theme -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/theme/monokai.css" />
+
+<!-- ⚛ JSX + TSX execution -->
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
 <style>
 :root {
-  --bg: #020617;
-  --panel: #020617;
-  --text: #e5e7eb;
-  --editor: #0f172a;
-  --accent: #2563eb;
-  --console-bg: #000;
+  --bg:#020617;
+  --panel:#020617;
+  --text:#e5e7eb;
+  --accent:#2563eb;
 }
 
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: monospace;
-  display: flex;
-  justify-content: center;
-  padding: 10px;
-  min-height: 100vh;
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:monospace;
+  padding:10px;
 }
 
 .app {
-  width: 100%;
-  max-width: 900px;
-  background: var(--panel);
-  padding: 12px;
-  border-radius: 12px;
-}
-
-h2 {
-  margin-top: 0;
-  color: var(--accent);
+  max-width:1000px;
+  margin:auto;
+  background:var(--panel);
+  padding:12px;
+  border-radius:10px;
 }
 
 .file-tabs {
-  display: flex;
-  gap: 6px;
-  margin: 8px 0;
-  overflow-x: auto;
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  padding-bottom:6px;
 }
 
 .file-btn {
-  padding: 8px 12px;
-  background: #334155;
-  border-radius: 8px;
-  color: white;
-  cursor: pointer;
-  flex-shrink: 0;
+  padding:8px 12px;
+  background:#334155;
+  border-radius:8px;
+  color:white;
+  cursor:pointer;
+}
+.file-btn.active { background:var(--accent); }
+
+#console,#errors {
+  background:black;
+  padding:8px;
+  border-radius:6px;
+  font-size:14px;
+  overflow-y:auto;
+  height:150px;
 }
 
-.file-btn.active {
-  background: var(--accent);
-}
-
-textarea {
-  width: 100%;
-  height: 300px;
-  background: var(--editor);
-  color: #22c55e;
-  border-radius: 10px;
-  border: none;
-  padding: 12px;
-  font-size: 16px;
-  resize: none;
-}
-
-.buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-  flex-wrap: wrap;
-}
+.error {color:red;}
+.log{color:white;}
 
 button {
-  flex: 1;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  background: var(--accent);
-  color: white;
-  cursor: pointer;
-  font-size: 16px;
+  padding:8px;
+  border-radius:8px;
+  background:var(--accent);
+  color:white;
+  border:none;
+  cursor:pointer;
+  margin:4px 0;
+  width:100%;
 }
 
-.console {
-  background: var(--console-bg);
-  height: 200px;
-  border-radius: 10px;
-  padding: 12px;
-  overflow-y: auto;
-  margin-top: 12px;
-  font-size: 14px;
-}
-
-.log { color: white; }
-.error { color: red; }
-
-/* fullscreen console */
-#consoleFull {
+#previewFull,#consoleFull {
   display:none;
   position:fixed;
-  top:0; left:0;
-  width:100vw; height:100vh;
+  top:0;left:0;
+  width:100vw;height:100vh;
   background:black;
-  padding:12px;
-  overflow-y:auto;
-  z-index:9999;
-}
-
-/* fullscreen preview */
-#previewArea {
-  display:none;
-  position:fixed;
-  top:0; left:0;
-  width:100vw; height:100vh;
-  background:white;
   z-index:9999;
 }
 
 #previewFrame {
-  width:100vw;
-  height:calc(100vh - 55px);
+  width:100%;
+  height:calc(100vh - 60px);
   border:none;
   background:white;
-}
-
-/* Android screen support */
-@media(max-width:600px){
-  textarea { height:350px; font-size:16px; }
-  button { font-size:15px; padding:10px; }
 }
 </style>
 </head>
 
 <body>
-
-<!-- EDITOR AREA -->
 <div class="app" id="editorArea">
-  <h2>Playground v6 — Android + JSX/TSX</h2>
+  <h2>Playground V13 — CodeMirror + JSX + TSX</h2>
 
+  <!-- 🔤 Files -->
   <div class="file-tabs">
     <div class="file-btn active" onclick="switchFile('html')">index.html</div>
     <div class="file-btn" onclick="switchFile('css')">style.css</div>
@@ -156,154 +114,145 @@ button {
     <div class="file-btn" onclick="switchFile('tsx')">app.tsx</div>
   </div>
 
+  <!-- 📝 Editor -->
   <textarea id="editor"></textarea>
 
-  <div class="buttons">
-    <button onclick="runCode()">▶ Run</button>
-    <button onclick="showConsole()">💬 Console</button>
-    <button onclick="showPreview()">🌍 Preview</button>
+  <!-- 🧪 Buttons -->
+  <button onclick="runCode()">▶ Run</button>
+  <button onclick="showPreviewFull()">🌍 Full Preview</button>
+  <button onclick="showConsoleFull()">🖥 Full Console</button>
+  <button onclick="clearPanels()">🧹 Clear</button>
 
-    <button onclick="showConsoleFull()">🖥 Full Console</button>
-    <button onclick="showPreviewFull()">🌐 Full Preview</button>
+  <!-- 📌 Output -->
+  <h3>Console</h3>
+  <div id="console"></div>
 
-    <button onclick="clearConsole()">🧹 Clear</button>
-  </div>
-
-  <div id="console" class="console"></div>
+  <h3>Errors</h3>
+  <div id="errors"></div>
 </div>
 
-<!-- FULL SCREEN PREVIEW -->
-<div id="previewArea">
-  <button onclick="hidePreview()">🔙 Back</button>
+
+<!-- ⬛ FULLSCREEN CONSOLE -->
+<div id="consoleFull">
+  <button onclick="hideConsoleFull()">🔙 Back</button>
+  <pre id="consoleFullBody" style="white-space:pre-wrap;color:white;"></pre>
+</div>
+
+<!-- 🌐 FULLSCREEN PREVIEW -->
+<div id="previewFull">
+  <button onclick="hidePreviewFull()">🔙 Back</button>
   <iframe id="previewFrame"></iframe>
 </div>
 
-<!-- FULL SCREEN CONSOLE -->
-<div id="consoleFull">
-  <button onclick="hideConsoleFull()">🔙 Back</button>
-  <pre id="consoleFullContent"></pre>
-</div>
 
 <script>
-/* ================== FILES =================== */
+/* ================= DATA ================== */
 let files = {
-  html: localStorage.getItem("html") || "<h1>Hello Android!</h1>",
-  css: localStorage.getItem("css") || "body { background:white; }",
-  js: localStorage.getItem("js") || "console.log('JS Works!');",
-  jsx: localStorage.getItem("jsx") || "function App(){ return <h1>Hello JSX!</h1>; }\nApp();",
-  tsx: localStorage.getItem("tsx") || "function App():any{ return <h1>Hello TSX!</h1>; }\nApp();",
+  html: localStorage.getItem("html") || "<h1>Hello JSX/TSX!</h1>",
+  css: localStorage.getItem("css") || "h1{color:skyblue;}",
+  js: localStorage.getItem("js") || "console.log('JS OK');",
+  jsx: localStorage.getItem("jsx") || "function App(){ return <h2>Hello JSX!</h2> } App();",
+  tsx: localStorage.getItem("tsx") || "function App():any{ return <h2>Hello TSX!</h2>} App();"
 };
 
-let selectedExt = "html";
+let curr = "html";
 
-const editor = document.getElementById("editor");
-const consoleBox = document.getElementById("console");
-
-/* ============ FILE SWITCH ============= */
-function switchFile(ext){
-  files[selectedExt] = editor.value;
-  selectedExt = ext;
-  editor.value = files[ext];
-  document.querySelectorAll(".file-btn").forEach(b=>b.classList.remove("active"));
-  [...document.querySelectorAll(".file-btn")].find(b=>b.innerText.includes(ext)).classList.add("active");
-}
-
-editor.addEventListener("input",()=>{
-  files[selectedExt] = editor.value;
-  localStorage.setItem(selectedExt, editor.value);
+/* ========== EDITOR INIT =========== */
+let cm = CodeMirror.fromTextArea(document.getElementById("editor"), {
+  mode:"javascript",
+  lineNumbers:true,
+  theme:"monokai",
+  tabSize:2,
 });
+cm.setValue(files[curr]);
 
-/* ============ CONSOLE FUNCTIONS ============= */
-function clearConsole(){ consoleBox.innerHTML=""; }
 
-function logConsole(msg){
-  consoleBox.innerHTML += `<div class="log">${msg}</div>`;
+/* ===== FILE SWITCH ===== */
+function switchFile(ext){
+  files[curr] = cm.getValue();
+  curr = ext;
+  cm.setValue(files[ext]);
+
+  document.querySelectorAll(".file-btn").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".file-btn").forEach(btn=>{
+    if(btn.innerText.includes(ext)) btn.classList.add("active");
+  });
 }
 
-/* FULL SCREEN CONSOLE */
-function showConsoleFull(){
-  document.getElementById("consoleFull").style.display="block";
-  document.getElementById("consoleFullContent").innerText = consoleBox.innerText;
-}
-function hideConsoleFull(){
-  document.getElementById("consoleFull").style.display="none";
-}
 
-/* SHOW NORMAL CONSOLE */
-function showConsole(){
-  window.scrollTo(0,document.body.scrollHeight);
+/* ===== CLEAR ===== */
+function clearPanels(){
+  consoleDiv.innerHTML="";
+  errorsDiv.innerHTML="";
 }
+const consoleDiv = document.getElementById("console");
+const errorsDiv = document.getElementById("errors");
 
-/* ============ RUN CODE ============= */
+function printLog(msg){ consoleDiv.innerHTML+=`<div class="log">${msg}</div>`; }
+function printErr(msg){ errorsDiv.innerHTML+=`<div class="error">${msg}</div>`; }
+
+
+/* ===== RUN ===== */
 function runCode(){
-  clearConsole();
+  clearPanels();
+  files[curr]=cm.getValue();
+
   let code = files["js"];
-
-  if (selectedExt==="jsx" || selectedExt==="tsx"){
-    try {
-      code = Babel.transform(files[selectedExt], { presets:["react","typescript"] }).code;
-    } catch(e){
-      return logConsole("JSX/TSX Error: " + e.message);
-    }
-  }
-
-  try {
-    let result = eval(code);
-    if(result !== undefined) logConsole("> " + result);
-  }catch(e){
-    logConsole("JS Error: " + e.message);
-  }
-}
-
-/* ============ PREVIEW GENERATION ============= */
-function generatePreview(){
-  let html = files["html"] || "";
-  let css = files["css"] || "";
-  let jsCode = files["js"] || "";
+  let combined = "";
 
   if (files["jsx"]){
-    try { jsCode += "\n" + Babel.transform(files["jsx"],{presets:["react"]}).code; } catch(e){}
-  }
-  if (files["tsx"]){
-    try { jsCode += "\n" + Babel.transform(files["tsx"],{presets:["react","typescript"]}).code; } catch(e){}
+    try{ combined += Babel.transform(files["jsx"],{presets:["react"]}).code; }
+    catch(e){ printErr("JSX Error: "+e.message); }
   }
 
-  return `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        <style> body{font-size:18px;padding:12px;} ${css} </style>
-      </head>
-      <body>${html}
-        <script>
-          try { ${jsCode} }
-          catch(e){ document.body.innerHTML += '<pre style="color:red">'+e+'</pre>' }
-        <\/script>
-      </body>
-    </html>`;
+  if (files["tsx"]){
+    try{ combined += Babel.transform(files["tsx"],{presets:["react","typescript"]}).code; }
+    catch(e){ printErr("TSX Error: "+e.message); }
+  }
+
+  code += "\n" + combined;
+
+  try{
+    let result = eval(code);
+    if(result!==undefined) printLog("> "+result);
+  } catch(e){
+    printErr("JS Error: "+e.message);
+  }
 }
 
-/* ============ PREVIEW ============= */
-function showPreview(){
-  files[selectedExt] = editor.value;
-  const iframe = document.getElementById("previewFrame");
-  iframe.srcdoc = generatePreview();
+
+/* ===== PREVIEW ===== */
+function generatePreview(){
+  return `
+  <html>
+    <head><style>${files.css}</style></head>
+    <body>${files.html}
+    <script>
+      try{
+        ${files.js}
+        ${Babel.transform(files.jsx,{presets:["react"]}).code}
+        ${Babel.transform(files.tsx,{presets:["react","typescript"]}).code}
+      }catch(e){
+        document.body.innerHTML += '<pre style="color:red">'+e+'</pre>'
+      }
+    <\/script>
+    </body>
+  </html>`;
 }
 
 function showPreviewFull(){
-  document.getElementById("previewArea").style.display="block";
-  document.getElementById("editorArea").style.display="none";
-  document.getElementById("previewFrame").srcdoc = generatePreview();
+  previewFull.style.display="block";
+  previewFrame.srcdoc = generatePreview();
 }
+function hidePreviewFull(){ previewFull.style.display="none"; }
 
-function hidePreview(){
-  document.getElementById("previewArea").style.display="none";
-  document.getElementById("editorArea").style.display="block";
+
+/* ===== CONSOLE FULL ===== */
+function showConsoleFull(){
+  consoleFull.style.display="block";
+  consoleFullBody.innerText = consoleDiv.innerText + "\n" + errorsDiv.innerText;
 }
-
-/* init */
-editor.value = files["html"];
+function hideConsoleFull(){ consoleFull.style.display="none"; }
 </script>
 </body>
 </html>
