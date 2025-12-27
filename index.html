@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Playground v8 — Learning mode</title>
+<title>Playground v9 — Learning mode</title>
 
 <!-- CodeMirror Syntax Highlight -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
@@ -59,6 +59,19 @@ button {
 
 .error{color:red;} .log{color:white;}
 
+/* small preview */
+#smallPreview {
+  margin-top:10px;
+  display:none;
+}
+#smallPreviewFrame {
+  width:100%;
+  height:300px;
+  border:none;
+  background:white;
+}
+
+/* fullscreen preview */
 #previewArea {
   display:none; position:fixed; top:0; left:0;
   width:100vw; height:100vh; background:white; z-index:9999;
@@ -66,12 +79,20 @@ button {
 #previewFrame {
   width:100vw; height:calc(100vh - 50px); border:none;
 }
+
+/* fullscreen console */
+#consoleFull {
+  display:none; position:fixed; top:0; left:0;
+  width:100vw; height:100vh; background:black; color:white;
+  z-index:9999; overflow-y:auto; padding:12px;
+}
+#consoleFullContent { white-space:pre-wrap; }
 </style>
 </head>
 
 <body>
 <div class="app" id="editorArea">
-  <h2>Playground v8 — HTML / CSS / JS</h2>
+  <h2>Playground v9 — HTML / CSS / JS</h2>
 
   <!-- file tabs -->
   <div class="file-tabs">
@@ -102,6 +123,11 @@ button {
   <div id="htmlPanel" class="panel active"></div>
   <div id="cssPanel" class="panel"></div>
   <div id="jsPanel" class="panel"></div>
+
+  <!-- small preview -->
+  <div id="smallPreview">
+    <iframe id="smallPreviewFrame"></iframe>
+  </div>
 </div>
 
 <!-- fullscreen preview -->
@@ -111,8 +137,7 @@ button {
 </div>
 
 <!-- fullscreen console -->
-<div id="consoleFull"
- style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:black;color:white;z-index:9999;">
+<div id="consoleFull">
   <button onclick="this.parentElement.style.display='none'">🔙 Back</button>
   <pre id="consoleFullContent"></pre>
 </div>
@@ -191,9 +216,9 @@ function runJS(){
   }catch(e){ p.innerHTML=`<div class="error">${e.message}</div>` }
 }
 
-/* ---------- preview ---------- */
+/* ---------- small preview ---------- */
 function showPreview(){
-  const frame=document.getElementById("previewFrame");
+  const frame=document.getElementById("smallPreviewFrame");
   frame.srcdoc = `
   <html><head><style>${files.css}</style></head>
   <body>${files.html}
@@ -202,8 +227,11 @@ function showPreview(){
   catch(e){ document.body.innerHTML+='<pre style="color:red">'+e+'</pre>' }
   <\/script>
   </body></html>`;
+  
+  document.getElementById("smallPreview").style.display="block";
 }
 
+/* ---------- big preview ---------- */
 function showPreviewFull(){
   showPreview();
   document.getElementById("previewArea").style.display="block";
