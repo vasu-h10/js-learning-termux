@@ -216,23 +216,44 @@ function hideConsoleFull(){
   document.getElementById("consoleFull").style.display="none"
 }
 
-/* ========== HISTORY ========== */
+/* ========== HISTORY (with delete) ========== */
 function openHistory(){
   const h=document.getElementById("historyInner")
   h.innerHTML="<h3>JS History</h3>"
+
   historyList.forEach((item,i)=>{
-    h.innerHTML+=`<div class='history-item'><span>${item.t}</span><button onclick='restoreHistory(${i})'>Load</button></div>`
+    h.innerHTML+=`
+    <div class='history-item'>
+      <span>${item.t}</span>
+      <div style="display:flex;gap:6px">
+        <button onclick='restoreHistory(${i})'>Load</button>
+        <button style="background:#d62828" onclick='deleteHistory(${i})'>Delete</button>
+      </div>
+    </div>`
   })
+
   document.getElementById("historyBox").style.display="block"
 }
+
 function restoreHistory(i){
-  files["script.js"]=historyList[i].js
-  saveFiles()
-  if(current==="script.js") loadFile()
-  alert("Restored script.js!")
+  files["script.js"]=historyList[i].js;
+  saveFiles();
+  if(current==="script.js") loadFile();
+  alert("Restored script.js!");
 }
+
+/* 🔥 delete specific history item */
+function deleteHistory(i){
+  if(confirm("Delete this history entry?")){
+    historyList.splice(i,1);
+    saveHist();
+    openHistory();   // refresh UI
+  }
+}
+
+/* close history on background tap */
 document.getElementById("historyBox").onclick=e=>{
-  if(e.target.id==="historyBox")e.target.style.display="none"
+  if(e.target.id==="historyBox") e.target.style.display="none"
 }
 
 /* ========== ZIP ========== */
