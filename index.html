@@ -3,11 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Playground v19 — Beginner Editor</title>
+<title>Playground v20 — Auto Theme Save</title>
 
-<!-- Prism for syntax highlight -->
-<link id="prismTheme" rel="stylesheet"
- href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
+<!-- Prism syntax highlight -->
+<link id="prismTheme" rel="stylesheet">
 <link rel="stylesheet"
  href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
@@ -15,31 +14,25 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <style>
-:root {
-  --bg:#020617; --panel:#020617; --text:#e5e7eb;
-  --accent:#2563eb; --console-bg:#111;
+:root{
+  --bg:#020617;--panel:#020617;--text:#e5e7eb;--accent:#2563eb;
+  --console-bg:#111;--editor-bg:#0f172a;--editor-text:#22c55e;
 }
-
-/* LIGHT MODE */
-body.light {
-  --bg:#f1f5f9; --panel:#ffffff; --text:#0f172a;
-  --console-bg:#e2e8f0;
+body.light{
+  --bg:#f1f5f9;--panel:#ffffff;--text:#111;
+  --console-bg:#e2e8f0;--editor-bg:#e9eef4;--editor-text:#111;
 }
 
 body{
   margin:0;background:var(--bg);color:var(--text);
-  font-family: monospace; display:flex; justify-content:center;
-  padding:10px; min-height:100vh;
+  font-family:monospace;display:flex;justify-content:center;
+  padding:10px;min-height:100vh;
 }
-
 .app{
-  width:100%; max-width:900px; background:var(--panel);
-  padding:12px; border-radius:12px;
+  width:100%;max-width:900px;background:var(--panel);
+  padding:12px;border-radius:12px;
 }
-
-h2{margin-top:0;color:var(--accent)}
-
-.file-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:8px}
+.file-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px}
 .file-btn{
   padding:8px 12px;background:#334155;color:white;
   border-radius:8px;cursor:pointer;flex-shrink:0;
@@ -47,37 +40,27 @@ h2{margin-top:0;color:var(--accent)}
 .file-btn.active{background:var(--accent)}
 
 #editorBox{
-  background:#0f172a;color:#22c55e;border-radius:8px;
-  padding:10px;min-height:300px;overflow-y:auto;
-  white-space:pre; font-size:15px;
+  background:var(--editor-bg);color:var(--editor-text);
+  border-radius:8px;padding:10px;min-height:320px;
+  overflow-y:auto;white-space:pre;outline:none;
 }
-
-/* theme change */
-body.light #editorBox{background:#e2e8f0;color:#111}
 
 .buttons{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
 button{
   flex:1;padding:10px;border:none;border-radius:8px;
-  background:var(--accent);color:white;cursor:pointer
+  background:var(--accent);color:white;cursor:pointer;
 }
 
 .panel{
-  background:var(--console-bg);margin-top:8px;padding:12px;
-  border-radius:10px;height:200px;overflow-y:auto;font-size:14px;
-  white-space:pre-wrap;
+  background:var(--console-bg);margin-top:10px;padding:12px;
+  border-radius:10px;height:220px;overflow-y:auto;font-size:14px;
+  white-space:pre-wrap;color:var(--text);
 }
-.log{color:var(--text)}
-.error{color:red}
-
-#previewArea{
-  display:none;position:fixed;top:0;left:0;
-  width:100vw;height:100vh;background:white;z-index:9999;
-}
-#previewFrame{width:100%;height:calc(100vh - 50px);border:none}
+.error{color:#ff5a5a;font-weight:bold}
 
 #consoleFull{
   display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
-  background:black;color:white;z-index:9999;overflow:auto;
+  background:black;color:white;z-index:9999;overflow:auto;padding:12px;
 }
 #consoleFullContent{white-space:pre-wrap}
 
@@ -87,11 +70,14 @@ button{
 }
 #historyInner{
   background:#111;padding:10px;border-radius:10px;
-  max-width:700px;margin:auto;margin-top:30px;color:white;
+  max-width:700px;margin:auto;margin-top:40px;color:white;
 }
 .history-item{
-  padding:6px;margin:4px 0;background:#222;border-radius:6px;
-  display:flex;justify-content:space-between;color:white;
+  padding:6px;margin:6px 0;background:#222;border-radius:6px;
+  display:flex;justify-content:space-between;
+}
+.history-item button{
+  padding:4px 8px;background:var(--accent);border:none;border-radius:4px;color:white;
 }
 </style>
 </head>
@@ -99,7 +85,7 @@ button{
 <body>
 
 <div class="app" id="editorArea">
-<h2>Playground v19 — HTML / CSS / JS</h2>
+<h2>Playground v20 — Auto Theme Save</h2>
 
 <!-- fixed beginner files -->
 <div class="file-tabs">
@@ -108,62 +94,69 @@ button{
   <div class="file-btn" onclick="switchFile('script.js')">script.js</div>
 </div>
 
-<!-- editor -->
 <div id="editorBox" contenteditable="true"></div>
 
 <div class="buttons">
   <button onclick="toggleTheme()">🌓 Theme</button>
   <button onclick="runJS()">▶ Run JS</button>
-  <button onclick="showPreviewFull()">🌐 Preview</button>
   <button onclick="showConsoleFull()">🖥 Console</button>
-  <button onclick="openHistory()">📜 History</button>
-  <button onclick="downloadZip()">📦 Download ZIP</button>
+  <button onclick="showPreview()">🌐 Preview</button>
+  <button onclick="openHistory()">📜 JS History</button>
+  <button onclick="downloadZip()">📦 ZIP</button>
 </div>
 
-<div id="jsPanel" class="panel"></div>
+<div id="consolePanel" class="panel"></div>
 </div>
 
-<!-- Full preview -->
-<div id="previewArea">
-  <button onclick="hidePreview()" style="width:100%;padding:10px;">🔙 Back</button>
-  <iframe id="previewFrame"></iframe>
+<!-- preview -->
+<div id="previewArea" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:white;z-index:9999">
+  <button onclick="hidePreview()" style="width:100%;padding:8px">🔙 Back</button>
+  <iframe id="previewFrame" style="width:100%;height:calc(100vh - 50px);border:none"></iframe>
 </div>
 
-<!-- Full console -->
+<!-- full console -->
 <div id="consoleFull">
   <button onclick="hideConsoleFull()" style="width:100%;padding:10px;">🔙 Back</button>
   <pre id="consoleFullContent"></pre>
 </div>
 
-<!-- History -->
+<!-- history -->
 <div id="historyBox"><div id="historyInner"></div></div>
 
 <script>
-/* ---- storage ---- */
-let files = JSON.parse(localStorage.getItem("files_v19") || "{}");
-let historyList = JSON.parse(localStorage.getItem("hist_v19") || "[]");
+/* ========== THEME AUTO RESTORE ========== */
+let savedTheme = localStorage.getItem("theme_v20") || "dark";
+if(savedTheme === "light"){ document.body.classList.add("light"); }
+document.getElementById("prismTheme").href =
+ savedTheme==="light"
+ ? "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css"
+ : "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css";
+
+/* ========== STORAGE ========== */
+let files = JSON.parse(localStorage.getItem("files_v20")||"{}");
+let historyList = JSON.parse(localStorage.getItem("hist_v20")||"[]");
 
 if(Object.keys(files).length===0){
   files={
-    "index.html":"<h1>Hello World!</h1>",
-    "style.css":"body{background:white;font-size:22px;}",
-    "script.js":"console.log('Learning JavaScript!')"
-  };
+    "index.html":"<h1>Hello!</h1>",
+    "style.css":"body{background:white;font-size:20px;}",
+    "script.js":"console.log('JS Ready!')"
+  }
 }
-function saveFiles(){localStorage.setItem("files_v19",JSON.stringify(files))}
-function saveHistory(){localStorage.setItem("hist_v19",JSON.stringify(historyList))}
+function saveFiles(){localStorage.setItem("files_v20",JSON.stringify(files))}
+function saveHist(){localStorage.setItem("hist_v20",JSON.stringify(historyList))}
 
 let current="index.html";
 const box=document.getElementById("editorBox");
+const consolePanel=document.getElementById("consolePanel");
 
-/* ---- load file ---- */
+/* ========== EDITOR LOAD ========== */
 function loadFile(){
   box.innerText = files[current];
-  Prism.highlightAll();
+  Prism.highlightElement(box);
 }
 loadFile();
 
-/* ---- switch files ---- */
 function switchFile(name){
   files[current]=box.innerText;
   saveFiles();
@@ -173,110 +166,96 @@ function switchFile(name){
   [...document.querySelectorAll(".file-btn")].find(b=>b.innerText.includes(name)).classList.add("active");
 }
 
-/* -------- Console Redirect -------- */
-(function redirectConsole(){
-  const panel=document.getElementById("jsPanel");
-
-  console.log = (...msg)=>{
-    panel.innerHTML += `<div class="log">${msg.join(" ")}</div>`;
-  }
-
-  console.error = (msg)=>{
-    panel.innerHTML += `<div class="error">${msg}</div>`;
-  }
-
-  window.onerror = (msg)=>{
-    panel.innerHTML += `<div class="error">${msg}</div>`;
-  }
-})();
-
-/* ---- Run JS ---- */
-function runJS(){
-  const panel=document.getElementById("jsPanel");
-  panel.innerHTML="";
-
-  historyList.push({t:new Date().toLocaleString(),snap:JSON.stringify(files)});
-  saveHistory();
-
-  try{
-    eval(files["script.js"]);
-  }catch(e){
-    console.error(e.message);
-  }
+/* ========== JS EXECUTION REAL CONSOLE ========== */
+function clearConsolePanel(){consolePanel.innerHTML=""}
+function addLog(type,msg){
+  const div=document.createElement("div")
+  div.className=type
+  div.textContent=msg
+  consolePanel.appendChild(div)
 }
 
-/* ---- Preview ---- */
-function showPreviewFull(){
-  const f=document.getElementById("previewFrame");
-  f.srcdoc = `
-    <html>
-    <head><style>${files["style.css"]}</style></head>
-    <body>${files["index.html"]}
-    <script>
-      try{${files["script.js"]}}
-      catch(e){document.body.innerHTML += '<pre style="color:red">'+e+'</pre>'}
-    <\/script>
-    </body></html>`;
-  document.getElementById("previewArea").style.display="block";
-  document.getElementById("editorArea").style.display="none";
+function runJS(){
+  clearConsolePanel()
+  historyList.push({t:new Date().toLocaleString(),js:files["script.js"]})
+  saveHist()
+
+  const frame=document.createElement("iframe")
+  frame.style.display="none"
+  document.body.appendChild(frame)
+  const ctx=frame.contentWindow
+
+  ctx.console.log=(...a)=>addLog("log",a.join(" "))
+  ctx.console.error=(...a)=>addLog("error",a.join(" "))
+  ctx.onerror=(msg,src,line,col,err)=>addLog("error",err?err.stack:msg)
+
+  try{ ctx.eval(files["script.js"]) }
+  catch(e){ addLog("error",e.stack) }
+
+  document.body.removeChild(frame)
+}
+
+/* ========== PREVIEW ========== */
+function showPreview(){
+  const f=document.getElementById("previewFrame")
+  f.srcdoc=`<html><head><style>${files["style.css"]}</style></head><body>${files["index.html"]}</body></html>`
+  document.getElementById("previewArea").style.display="block"
+  document.getElementById("editorArea").style.display="none"
 }
 function hidePreview(){
-  document.getElementById("previewArea").style.display="none";
-  document.getElementById("editorArea").style.display="block";
+  document.getElementById("previewArea").style.display="none"
+  document.getElementById("editorArea").style.display="block"
 }
 
-/* ---- Full console copy ---- */
+/* ========== FULL CONSOLE ========== */
 function showConsoleFull(){
-  document.getElementById("consoleFullContent").innerText =
-    document.getElementById("jsPanel").innerText;
-  document.getElementById("consoleFull").style.display="block";
+  document.getElementById("consoleFullContent").innerText = consolePanel.innerText
+  document.getElementById("consoleFull").style.display="block"
 }
 function hideConsoleFull(){
-  document.getElementById("consoleFull").style.display="none";
+  document.getElementById("consoleFull").style.display="none"
 }
 
-/* ---- History ---- */
+/* ========== HISTORY ========== */
 function openHistory(){
-  const h=document.getElementById("historyInner");
-  h.innerHTML="<h3>History</h3>";
+  const h=document.getElementById("historyInner")
+  h.innerHTML="<h3>JS History</h3>"
   historyList.forEach((item,i)=>{
-    h.innerHTML+=`
-    <div class="history-item">
-      <span>${item.t}</span>
-      <button onclick="restoreHistory(${i})">Restore</button>
-    </div>`;
-  });
-  document.getElementById("historyBox").style.display="block";
+    h.innerHTML+=`<div class='history-item'><span>${item.t}</span><button onclick='restoreHistory(${i})'>Load</button></div>`
+  })
+  document.getElementById("historyBox").style.display="block"
 }
 function restoreHistory(i){
-  files=JSON.parse(historyList[i].snap);
-  saveFiles(); loadFile(); alert("Restored!");
+  files["script.js"]=historyList[i].js
+  saveFiles()
+  if(current==="script.js") loadFile()
+  alert("Restored script.js!")
 }
 document.getElementById("historyBox").onclick=e=>{
-  if(e.target.id==="historyBox")e.target.style.display="none";
-};
-
-/* ---- ZIP ---- */
-function downloadZip(){
-  let zip=new JSZip();
-  Object.keys(files).forEach(n=>zip.file(n,files[n]));
-  zip.generateAsync({type:"blob"}).then(content=>{
-    const a=document.createElement("a");
-    a.href=URL.createObjectURL(content);
-    a.download="project.zip";
-    a.click();
-  });
+  if(e.target.id==="historyBox")e.target.style.display="none"
 }
 
-/* ---- Theme ---- */
+/* ========== ZIP ========== */
+function downloadZip(){
+  let zip=new JSZip()
+  Object.keys(files).forEach(n=>zip.file(n,files[n]))
+  zip.generateAsync({type:"blob"}).then(c=>{
+    let a=document.createElement("a")
+    a.href=URL.createObjectURL(c)
+    a.download="project.zip"
+    a.click()
+  })
+}
+
+/* ========== THEME TOGGLE & SAVE ========== */
 function toggleTheme(){
-  const body=document.body;
-  const light=body.classList.toggle("light");
+  const light=document.body.classList.toggle("light")
+  localStorage.setItem("theme_v20", light?"light":"dark")
   document.getElementById("prismTheme").href =
     light
-    ? "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css"
-    : "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css";
-  loadFile();
+     ? "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css"
+     : "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css"
+  loadFile()
 }
 </script>
 </body>
