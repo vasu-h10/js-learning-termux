@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Playground v11 — Beginner Mode</title>
+<title>Playground v12 — Beginner Mode + Fast Editor</title>
 
 <!-- CodeMirror Syntax Highlight -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
@@ -16,8 +16,9 @@
 <style>
 :root {
   --bg:#020617; --panel:#020617; --text:#e5e7eb;
-  --editor-bg:#0f172a; --accent:#2563eb; --console-bg:#000;
+  --accent:#2563eb; --console-bg:#000;
 }
+
 body {
   margin:0; background:var(--bg); color:var(--text);
   font-family:monospace; display:flex; justify-content:center;
@@ -27,26 +28,29 @@ body {
   width:100%; max-width:900px; background:var(--panel);
   border-radius:12px; padding:12px;
 }
-.file-tabs {
-  display:flex; gap:6px; overflow-x:auto; margin-bottom:8px;
-}
+
+/* file tabs */
+.file-tabs { display:flex; gap:6px; overflow-x:auto; margin-bottom:8px; }
 .file-btn {
   padding:8px 12px; background:#334155; border-radius:8px;
-  cursor:pointer; flex-shrink:0;
+  cursor:pointer; flex-shrink:0; white-space:nowrap;
 }
 .file-btn.active { background:var(--accent); }
 
+/* editor controls */
 #editorControls { display:flex; gap:6px; margin:6px 0; }
 #editorControls input {
   width:60%; padding:6px; border-radius:6px; border:none;
 }
 
+/* buttons */
 .buttons { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
 button {
   flex:1; padding:10px; border:none; border-radius:8px;
   background:var(--accent); color:white; cursor:pointer;
 }
 
+/* panels */
 .panel-tabs { display:flex; gap:6px; margin-top:10px; }
 .panel-btn {
   padding:6px 10px; background:#334155; border-radius:6px;
@@ -64,6 +68,7 @@ button {
 
 .error{color:red;} .log{color:white;}
 
+/* preview fullscreen */
 #previewArea {
   display:none; position:fixed; top:0; left:0;
   width:100vw; height:100vh; background:white; z-index:9999;
@@ -76,7 +81,7 @@ button {
 
 <body>
 <div class="app" id="editorArea">
-  <h2>Playground v11 — HTML / CSS / JS Learning</h2>
+  <h2>Playground v12 — HTML / CSS / JS Learning</h2>
 
   <!-- file tabs -->
   <div class="file-tabs" id="fileTabs"></div>
@@ -92,20 +97,21 @@ button {
   <!-- editor -->
   <textarea id="editor"></textarea>
 
-  <!-- buttons -->
+  <!-- action buttons -->
   <div class="buttons">
     <button onclick="runJS()">▶ Run JS</button>
     <button onclick="showPreviewFull()">🌐 Preview Full</button>
     <button onclick="showConsoleFull()">🖥 Console Full</button>
   </div>
 
-  <!-- panels -->
+  <!-- panel selector -->
   <div class="panel-tabs">
     <div class="panel-btn active" onclick="showPanel('htmlPanel')">HTML validator</div>
     <div class="panel-btn" onclick="showPanel('cssPanel')">CSS validator</div>
     <div class="panel-btn" onclick="showPanel('jsPanel')">JS console</div>
   </div>
 
+  <!-- output panels -->
   <div id="htmlPanel" class="panel active"></div>
   <div id="cssPanel" class="panel"></div>
   <div id="jsPanel" class="panel"></div>
@@ -128,7 +134,6 @@ button {
 /* ---------- storage ---------- */
 let files = JSON.parse(localStorage.getItem("files") || "{}");
 
-/* default starter files */
 if(Object.keys(files).length === 0){
   files = {
     "index.html":"<h1>Hello!</h1>",
@@ -139,15 +144,25 @@ if(Object.keys(files).length === 0){
 
 function saveFiles(){ localStorage.setItem("files", JSON.stringify(files)); }
 
-/* ---------- editor+syntax ---------- */
+/* ---------- editor ---------- */
 let currentFile = Object.keys(files)[0];
 let cmEditor;
 
 function setupEditor(){
   cmEditor = CodeMirror.fromTextArea(document.getElementById("editor"),{
-    mode:getMode(currentFile), theme:"dracula",
-    lineNumbers:true
+    mode:getMode(currentFile),
+    theme:"dracula",
+    lineNumbers:true,
+
+    /* 🚀 PERFORMANCE OPTIONS */
+    viewportMargin: 20,        // only render visible lines
+    lineWrapping: true,
+    scrollbarStyle: "simple",
+    cursorBlinkRate: 0,
+    tabSize: 2,
+    indentUnit: 2,
   });
+
   cmEditor.setValue(files[currentFile]);
   cmEditor.on("change",()=>{
     files[currentFile] = cmEditor.getValue();
@@ -156,7 +171,7 @@ function setupEditor(){
 }
 setupEditor();
 
-/* ---------- tabs display ---------- */
+/* ---------- tabs ---------- */
 function refreshTabs(){
   const t=document.getElementById("fileTabs");
   t.innerHTML="";
@@ -167,19 +182,19 @@ function refreshTabs(){
 }
 refreshTabs();
 
-/* ---------- switching files ---------- */
+/* ---------- switch file ---------- */
+function getMode(name){
+  if(name.endsWith(".js")) return "javascript";
+  if(name.endsWith(".css")) return "css";
+  return "xml";
+}
+
 function switchFile(name){
   files[currentFile] = cmEditor.getValue();
   currentFile=name;
   cmEditor.setOption("mode", getMode(name));
   cmEditor.setValue(files[name]);
   refreshTabs();
-}
-
-function getMode(name){
-  if(name.endsWith(".js")) return "javascript";
-  if(name.endsWith(".css")) return "css";
-  return "xml";
 }
 
 /* ---------- file operations ---------- */
@@ -240,7 +255,7 @@ function validateCSS(){
   catch(e){ p.innerHTML=`<div class="error">${e.message}</div>`; }
 }
 
-/* ---------- JS run ---------- */
+/* ---------- run JS ---------- */
 function runJS(){
   validateHTML(); validateCSS();
   const p=document.getElementById("jsPanel");
