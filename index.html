@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Playground v14 — Beginner + History</title>
+<title>Playground v15 — W3C Validators + Beginner</title>
 
-<!-- CodeMirror Syntax Highlight -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
@@ -61,45 +60,31 @@ button {
   width:100vw; height:100vh; background:white; z-index:9999;
 }
 #previewFrame { width:100%; height:calc(100vh - 50px); border:none; }
-
-/* history modal */
-#historyBox {
-  display:none; position:fixed; top:0; left:0;
-  width:100vw; height:100vh; background:#000b; z-index:9999;
-  padding:10px; overflow:auto;
-}
-#historyInner {
-  background:#111; padding:10px; border-radius:10px;
-  max-width:700px; margin:auto; margin-top:30px;
-}
-.history-item {
-  padding:6px; margin:4px 0; background:#222; border-radius:6px;
-  display:flex; justify-content:space-between; align-items:center;
-}
-.history-item button { padding:4px 8px; font-size:14px; }
 </style>
 </head>
 
 <body>
 <div class="app" id="editorArea">
-  <h2>Playground v14 — HTML / CSS / JS</h2>
+  <h2>Playground v15 — W3C Validators + Beginner</h2>
 
-  <!-- fixed 3 files -->
+  <!-- file tabs -->
   <div class="file-tabs">
     <div class="file-btn active" onclick="switchFile('index.html')">index.html</div>
     <div class="file-btn" onclick="switchFile('style.css')">style.css</div>
     <div class="file-btn" onclick="switchFile('script.js')">script.js</div>
   </div>
 
+  <!-- editor -->
   <textarea id="editor"></textarea>
 
   <div class="buttons">
     <button onclick="runJS()">▶ Run JS</button>
+    <button onclick="validateHTML_W3()">🔍 W3C HTML</button>
+    <button onclick="validateCSS_W3()">🎨 W3C CSS</button>
     <button onclick="showPreviewFull()">🌐 Preview Full</button>
-    <button onclick="showConsoleFull()">🖥 Console Full</button>
-    <button onclick="openHistory()">📜 History</button>
   </div>
 
+  <!-- output panels -->
   <div class="panel-tabs">
     <div class="panel-btn active" onclick="showPanel('htmlPanel')">HTML validator</div>
     <div class="panel-btn" onclick="showPanel('cssPanel')">CSS validator</div>
@@ -117,21 +102,8 @@ button {
   <iframe id="previewFrame"></iframe>
 </div>
 
-<!-- full console -->
-<div id="consoleFull"
- style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:black;color:white;z-index:9999;">
-  <button onclick="hideConsoleFull()">🔙 Back</button>
-  <pre id="consoleFullContent"></pre>
-</div>
-
-<!-- history -->
-<div id="historyBox"><div id="historyInner"></div></div>
-
 <script>
-/* ---------- saved files ---------- */
-let files = JSON.parse(localStorage.getItem("files_v14") || "{}");
-let historyList = JSON.parse(localStorage.getItem("history_v14") || "[]");
-
+let files = JSON.parse(localStorage.getItem("files_v15") || "{}");
 if(Object.keys(files).length === 0){
   files = {
     "index.html":"<h1>Hello!</h1>",
@@ -139,20 +111,9 @@ if(Object.keys(files).length === 0){
     "script.js":"console.log('JS OK');"
   };
 }
-function saveFiles(){ localStorage.setItem("files_v14", JSON.stringify(files)); }
+function saveFiles(){localStorage.setItem("files_v15",JSON.stringify(files));}
 
-/* ---------- save history on run/preview ---------- */
-function makeHistory(){
-  historyList.push({
-    time:new Date().toLocaleString(),
-    snapshot:JSON.stringify(files)
-  });
-  localStorage.setItem("history_v14", JSON.stringify(historyList));
-}
-
-/* ---------- editor ---------- */
-let currentFile="index.html";
-let cmEditor;
+let currentFile="index.html", cmEditor;
 
 function setupEditor(){
   cmEditor=CodeMirror.fromTextArea(document.getElementById("editor"),{
@@ -166,115 +127,77 @@ function setupEditor(){
 }
 setupEditor();
 
-/* ---------- switch file ---------- */
 function switchFile(name){
   files[currentFile]=cmEditor.getValue();
   currentFile=name;
   let mode=name.endsWith(".js")?"javascript":name.endsWith(".css")?"css":"xml";
   cmEditor.setOption("mode",mode);
-  cmEditor.setValue(files[name]);
+  cmEditor.setValue(files[currentFile]);
   document.querySelectorAll(".file-btn").forEach(b=>b.classList.remove("active"));
   [...document.querySelectorAll(".file-btn")].find(b=>b.innerText.includes(name)).classList.add("active");
-  updatePanels();
 }
 
-/* ---------- update validators ---------- */
-function updatePanels(){
-  validateHTML();
-  validateCSS();
+function showPanel(id){
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 }
 
-/* ---------- HTML validator ---------- */
-function validateHTML(){
+/* ---------- W3C VALIDATORS via proxy ---------- */
+const PROXY = "/api/w3proxy"; // update if deployed elsewhere
+
+async function validateHTML_W3(){
   const p=document.getElementById("htmlPanel");
+  p.innerHTML="Validating...";
+  const r=await fetch(PROXY,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({mode:"html",content:files["index.html"]})
+  });
+  const result=await r.json();
   p.innerHTML="";
-  const parser=new DOMParser();
-  const doc=parser.parseFromString(files["index.html"],"text/html");
-  const errors=doc.querySelectorAll("parsererror");
-  if(errors.length===0) p.innerHTML="<div class='log'>No HTML errors ✔</div>";
-  else errors.forEach(e=>p.innerHTML+=`<div class='error'>${e.textContent}</div>`);
+  if(!result.messages || result.messages.length===0)
+    return p.innerHTML="<div class='log'>No HTML errors ✓</div>";
+  result.messages.forEach(m=>p.innerHTML+=`<div class='error'>${m.message}</div>`);
 }
 
-/* ---------- CSS validator ---------- */
-function validateCSS(){
+async function validateCSS_W3(){
   const p=document.getElementById("cssPanel");
+  p.innerHTML="Validating...";
+  const r=await fetch(PROXY,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({mode:"css",content:files["style.css"]})
+  });
+  const result=await r.json();
   p.innerHTML="";
-  try{
-    new CSSStyleSheet().replaceSync(files["style.css"]);
-    p.innerHTML="<div class='log'>No CSS errors ✔</div>";
-  }catch(e){ p.innerHTML=`<div class='error'>${e.message}</div>`; }
+  if(!result.cssvalidation.errors.length)
+    return p.innerHTML="<div class='log'>No CSS errors ✓</div>";
+  result.cssvalidation.errors.forEach(e=>p.innerHTML+=`<div class='error'>${e.message}</div>`);
 }
 
-/* ---------- JS console ---------- */
 function runJS(){
-  makeHistory();
-  updatePanels();
   const p=document.getElementById("jsPanel");
   p.innerHTML="";
   try{
     let r=eval(files["script.js"]);
     if(r!==undefined) p.innerHTML+=`<div class='log'>${r}</div>`;
-  }catch(e){ p.innerHTML=`<div class='error'>${e.message}</div>`; }
+  }catch(e){ p.innerHTML=`<div class='error'>${e.message}</div>` }
 }
 
-/* ---------- full preview ---------- */
 function showPreviewFull(){
-  makeHistory();
   const frame=document.getElementById("previewFrame");
-  frame.srcdoc=`
-  <html><head><style>${files["style.css"]}</style></head>
+  frame.srcdoc=`<html><head><style>${files["style.css"]}</style></head>
   <body>${files["index.html"]}
   <script>
-  try{ ${files["script.js"]} }
-  catch(e){ document.body.innerHTML+='<pre style="color:red">'+e+'</pre>' }
+    try{ ${files["script.js"]} }
+    catch(e){ document.body.innerHTML+='<pre style="color:red">'+e+'</pre>'}
   <\/script>
   </body></html>`;
   document.getElementById("previewArea").style.display="block";
   document.getElementById("editorArea").style.display="none";
 }
-
-/* ---------- exit preview ---------- */
 function hidePreview(){
   document.getElementById("previewArea").style.display="none";
   document.getElementById("editorArea").style.display="block";
 }
-
-/* ---------- full console ---------- */
-function showConsoleFull(){
-  document.getElementById("consoleFullContent").innerText =
-    document.getElementById("jsPanel").innerText;
-  document.getElementById("consoleFull").style.display="block";
-}
-function hideConsoleFull(){
-  document.getElementById("consoleFull").style.display="none";
-}
-
-/* ---------- history ---------- */
-function openHistory(){
-  const div=document.getElementById("historyInner");
-  div.innerHTML="<h3>History</h3>";
-  historyList.forEach((h,i)=>{
-    div.innerHTML+=`
-      <div class="history-item">
-        <span>${h.time}</span>
-        <button onclick="restoreHistory(${i})">Restore</button>
-      </div>`;
-  });
-  document.getElementById("historyBox").style.display="block";
-}
-function restoreHistory(i){
-  files=JSON.parse(historyList[i].snapshot);
-  saveFiles();
-  cmEditor.setValue(files[currentFile]);
-  updatePanels();
-  alert("Restored!");
-}
-document.getElementById("historyBox").onclick=e=>{
-  if(e.target.id==="historyBox") e.target.style.display="none";
-};
-
-/* run initial validators */
-updatePanels();
 </script>
 </body>
 </html>
