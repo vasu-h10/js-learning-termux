@@ -1,52 +1,126 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Playground v18 — Beginner + History + Download</title>
+<title>Playground v20 — Beginner + Theme</title>
 
-<!-- CodeMirror Syntax Highlight -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+<!-- Prism Syntax Highlight -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-twilight.min.css" id="theme-dark">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" id="theme-light" disabled>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <style>
-:root{--bg:#020617;--panel:#020617;--text:#e5e7eb;--accent:#2563eb;--console-bg:#000}
-body{margin:0;background:var(--bg);color:var(--text);font-family:monospace;display:flex;justify-content:center;padding:10px;min-height:100vh}
-.app{width:100%;max-width:900px;background:var(--panel);border-radius:12px;padding:12px}
-.file-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:8px}
-.file-btn{padding:8px 12px;background:#334155;border-radius:8px;cursor:pointer}
-.file-btn.active{background:var(--accent)}
-.buttons{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
-button{flex:1;padding:10px;border:none;border-radius:8px;background:var(--accent);color:white;cursor:pointer}
-.panel-tabs{display:flex;gap:6px;margin-top:10px}
-.panel-btn{padding:6px 10px;background:#334155;border-radius:6px;cursor:pointer}
-.panel-btn.active{background:var(--accent)}
-.panel{margin-top:8px;background:var(--console-bg);padding:12px;border-radius:10px;height:200px;overflow-y:auto;font-size:14px;display:none}
-.panel.active{display:block}
-.error{color:red}.log{color:white}
-#previewArea{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:white;z-index:9999}
-#previewFrame{width:100%;height:calc(100vh - 50px);border:none}
-#historyBox{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000b;z-index:9999;padding:10px;overflow:auto}
-#historyInner{background:#111;padding:10px;border-radius:10px;max-width:700px;margin:auto;margin-top:30px}
-.history-item{padding:6px;margin:4px 0;background:#222;border-radius:6px;display:flex;justify-content:space-between}
-
-/* === mobile copy-paste fix === */
-.CodeMirror{
-  -webkit-user-modify: read-write-plaintext-only;
-  user-select:text;
+:root {
+  --accent:#2563eb;
 }
-.cm-fat-cursor { caret-color:white; }
+body {
+  margin:0;
+  font-family:monospace;
+  padding:10px;
+  display:flex;
+  justify-content:center;
+  min-height:100vh;
+}
+body[data-theme="dark"] {
+  background:#020617;
+  color:#e5e7eb;
+}
+body[data-theme="light"] {
+  background:#f4f4f4;
+  color:#222;
+}
+.app {
+  width:100%;
+  max-width:900px;
+  background:rgba(0,0,0,.2);
+  border-radius:12px;
+  padding:12px;
+}
+.file-tabs {
+  display:flex;gap:6px;overflow-x:auto;margin-bottom:8px;
+}
+.file-btn {
+  padding:8px 12px;
+  background:#334155;
+  border-radius:8px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.file-btn.active { background:var(--accent); }
+
+textarea {
+  width:100%;
+  height:260px;
+  border-radius:8px;
+  padding:10px;
+  font-size:14px;
+  outline:none;
+  border:1px solid #475569;
+  background:transparent;
+  color:inherit;
+  caret-color:var(--accent);
+  resize:none;
+}
+
+pre { margin:0;padding:0; }
+
+.buttons {
+  display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;
+}
+button {
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:var(--accent);
+  color:white;
+  cursor:pointer;
+}
+
+.panel {
+  margin-top:8px;
+  background:#000;
+  padding:12px;
+  border-radius:10px;
+  height:200px;
+  overflow-y:auto;
+  font-size:14px;
+}
+.log{color:#fff;}
+.error{color:red;}
+
+#previewArea {
+  display:none;position:fixed;top:0;left:0;
+  width:100%;height:100%;background:white;z-index:9999;
+}
+#previewFrame {
+  width:100%;height:calc(100vh - 50px);border:none;
+}
+#consoleFull {
+  display:none;position:fixed;top:0;left:0;
+  width:100%;height:100%;background:#000;color:#fff;z-index:9999;
+}
+#consoleFullContent { white-space:pre-wrap; }
+
+#themeBtn {
+  position:absolute;top:10px;right:10px;
+  padding:6px 12px;border-radius:6px;
+  background:var(--accent);color:white;
+}
 </style>
 </head>
 
 <body>
+
+<button id="themeBtn" onclick="toggleTheme()">🌗 Theme</button>
+
 <div class="app" id="editorArea">
-<h2>Playground v18 — HTML / CSS / JS</h2>
+<h2>Playground v20 — HTML / CSS / JS</h2>
 
 <div class="file-tabs">
 <div class="file-btn active" onclick="switchFile('index.html')">index.html</div>
@@ -55,20 +129,17 @@ button{flex:1;padding:10px;border:none;border-radius:8px;background:var(--accent
 </div>
 
 <textarea id="editor"></textarea>
+<pre><code id="highlighted" class="language-markup"></code></pre>
 
 <div class="buttons">
 <button onclick="runJS()">▶ Run JS</button>
 <button onclick="showPreviewFull()">🌐 Preview</button>
 <button onclick="showConsoleFull()">🖥 Console</button>
 <button onclick="openHistory()">📜 History</button>
-<button onclick="downloadZip()">📦 Download ZIP</button>
+<button onclick="downloadZip()">📦 Download</button>
 </div>
 
-<div class="panel-tabs">
-<div class="panel-btn active" onclick="showPanel('jsPanel')">JS console</div>
-</div>
-
-<div id="jsPanel" class="panel active"></div>
+<div id="jsPanel" class="panel"></div>
 </div>
 
 <div id="previewArea">
@@ -76,94 +147,135 @@ button{flex:1;padding:10px;border:none;border-radius:8px;background:var(--accent
 <iframe id="previewFrame"></iframe>
 </div>
 
-<div id="consoleFull" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:black;color:white;z-index:9999">
+<div id="consoleFull">
 <button onclick="hideConsoleFull()">🔙 Back</button>
 <pre id="consoleFullContent"></pre>
 </div>
 
-<div id="historyBox"><div id="historyInner"></div></div>
-
 <script>
-let files=JSON.parse(localStorage.getItem("files_v18")||"{}")
-let hist=JSON.parse(localStorage.getItem("hist_v18")||"[]")
+let files = JSON.parse(localStorage.getItem("files_v20")||"{}");
+let hist  = JSON.parse(localStorage.getItem("hist_v20")||"[]");
 
 if(Object.keys(files).length===0){
-files={"index.html":"<h1>Hello!</h1>","style.css":"body{background:white;}","script.js":"console.log('JS OK')"}
+  files={
+    "index.html":"<h1>Hello!</h1>",
+    "style.css":"body{background:white;}",
+    "script.js":"console.log('JS OK')"
+  };
 }
 
-function save(){localStorage.setItem("files_v18",JSON.stringify(files))}
-function saveHist(){localStorage.setItem("hist_v18",JSON.stringify(hist))}
+let current="index.html";
+let editor=document.getElementById("editor");
+let highlighted=document.getElementById("highlighted");
 
-let current="index.html"
-let cm
+function save(){localStorage.setItem("files_v20",JSON.stringify(files))}
+function saveHist(){localStorage.setItem("hist_v20",JSON.stringify(hist))}
 
-function setup(){
-cm=CodeMirror.fromTextArea(document.getElementById("editor"),{
-  mode:"xml",
-  theme:"dracula",
-  lineNumbers:true,
-  lineWrapping:true,
-  inputStyle:"textarea"   /* <-- MOST IMPORTANT FIX */
-})
-cm.setValue(files[current])
-cm.on("change",()=>{files[current]=cm.getValue();save()})
+/* update highlight */
+function refreshHighlight(){
+  highlighted.textContent = files[current];
+  highlighted.className="language-" +
+    (current.endsWith(".js")?"javascript":current.endsWith(".css")?"css":"markup");
+  Prism.highlightElement(highlighted);
 }
-setup()
 
+/* setup */
+editor.value = files[current];
+editor.addEventListener("input", ()=>{
+  files[current]=editor.value;
+  save();
+  refreshHighlight();
+});
+refreshHighlight();
+
+/* theme */
+function toggleTheme(){
+  let b=document.documentElement;
+  let d=document.getElementById("theme-dark");
+  let l=document.getElementById("theme-light");
+
+  if(b.getAttribute("data-theme")==="dark"){
+    b.setAttribute("data-theme","light");
+    d.disabled=true; l.disabled=false;
+  } else {
+    b.setAttribute("data-theme","dark");
+    d.disabled=false; l.disabled=true;
+  }
+  localStorage.setItem("theme_v20",b.getAttribute("data-theme"));
+}
+
+let savedTheme=localStorage.getItem("theme_v20");
+if(savedTheme){
+  document.documentElement.setAttribute("data-theme",savedTheme);
+  if(savedTheme==="light"){themeBtn.click();}
+}
+
+/* file switch */
 function switchFile(n){
-files[current]=cm.getValue();current=n
-cm.setOption("mode",current.endsWith(".js")?"javascript":current.endsWith(".css")?"css":"xml")
-cm.setValue(files[current])
-document.querySelectorAll(".file-btn").forEach(b=>b.classList.remove("active"))
-;[...document.querySelectorAll(".file-btn")].find(b=>b.innerText.includes(n)).classList.add("active")
+  files[current]=editor.value;save();
+  current=n;
+  editor.value=files[n];
+  refreshHighlight();
+  document.querySelectorAll(".file-btn").forEach(b=>b.classList.remove("active"));
+  [...document.querySelectorAll(".file-btn")].find(b=>b.innerText.includes(n)).classList.add("active");
 }
 
-function showPanel(id){document.getElementById("jsPanel").classList.add("active")}
-
+/* run JS */
 function runJS(){
-let p=document.getElementById("jsPanel");p.innerHTML=""
-try{let r=eval(files["script.js"]);if(r!==undefined)p.innerHTML+=`<div class="log">${r}</div>`}
-catch(e){p.innerHTML=`<div class="error">${e.message}</div>`}
-hist.push({t:new Date().toLocaleString(),snap:JSON.stringify(files)});saveHist()
+  let p=document.getElementById("jsPanel");p.innerHTML="";
+  try{
+    let r=eval(files["script.js"]);
+    if(r!==undefined)p.innerHTML+=`<div class="log">${r}</div>`;
+  }catch(e){
+    p.innerHTML=`<div class="error">${e.message}</div>`;
+  }
+  hist.push({t:new Date().toLocaleString(), snap:JSON.stringify(files)});saveHist();
 }
 
+/* preview */
 function showPreviewFull(){
-let f=document.getElementById("previewFrame")
-f.srcdoc=`<html><head><style>${files["style.css"]}</style></head><body>${files["index.html"]}<script>try{${files["script.js"]}}catch(e){document.body.innerHTML+='<pre style="color:red">'+e+'</pre>'}<\/script></body></html>`
-document.getElementById("previewArea").style.display="block"
-document.getElementById("editorArea").style.display="none"
+  let f=document.getElementById("previewFrame");
+  f.srcdoc=`<html><head><style>${files["style.css"]}</style></head>
+  <body>${files["index.html"]}
+  <script>try{${files["script.js"]}}catch(e){document.body.innerHTML+='<pre style="color:red">'+e+'</pre>'}<\/script>
+  </body></html>`;
+  document.getElementById("previewArea").style.display="block";
+  document.getElementById("editorArea").style.display="none";
 }
 function hidePreview(){
-document.getElementById("previewArea").style.display="none"
-document.getElementById("editorArea").style.display="block"
+  document.getElementById("previewArea").style.display="none";
+  document.getElementById("editorArea").style.display="block";
 }
 
+/* full console */
 function showConsoleFull(){
-document.getElementById("consoleFullContent").innerText=document.getElementById("jsPanel").innerText
-document.getElementById("consoleFull").style.display="block"
+  document.getElementById("consoleFullContent").innerText=document.getElementById("jsPanel").innerText;
+  document.getElementById("consoleFull").style.display="block";
 }
 function hideConsoleFull(){
-document.getElementById("consoleFull").style.display="none"
+  document.getElementById("consoleFull").style.display="none";
 }
 
+/* history */
 function openHistory(){
-let box=document.getElementById("historyInner");box.innerHTML="<h3>History</h3>"
-hist.forEach((h,i)=>{box.innerHTML+=`<div class='history-item'><span>${h.t}</span><button onclick='restore(${i})'>Restore</button></div>`})
-document.getElementById("historyBox").style.display="block"
-}
-function restore(i){
-files=JSON.parse(hist[i].snap);save();cm.setValue(files[current]);alert("Restored")
+  let div=document.getElementById("jsPanel");
+  div.innerHTML="--- HISTORY ---<br>";
+  hist.slice().reverse().forEach(h=>{
+    div.innerHTML+=`${h.t}<br>`;
+  });
 }
 
+/* download */
 function downloadZip(){
-let z=new JSZip()
-Object.keys(files).forEach(n=>z.file(n,files[n]))
-z.generateAsync({type:"blob"}).then(c=>{
-let a=document.createElement("a")
-a.href=URL.createObjectURL(c);a.download="project.zip";a.click()
-})
+  let z=new JSZip();
+  Object.keys(files).forEach(n=>z.file(n,files[n]));
+  z.generateAsync({type:"blob"}).then(c=>{
+    let a=document.createElement("a");
+    a.href=URL.createObjectURL(c);
+    a.download="project.zip";
+    a.click();
+  });
 }
-document.getElementById("historyBox").onclick=e=>{if(e.target.id==="historyBox")e.target.style.display="none"}
 </script>
 </body>
 </html>
