@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Playground v17 — Beginner + History + Download</title>
+<title>Playground v18 — Beginner + History + Download</title>
 
+<!-- CodeMirror Syntax Highlight -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
@@ -33,12 +34,19 @@ button{flex:1;padding:10px;border:none;border-radius:8px;background:var(--accent
 #historyBox{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000b;z-index:9999;padding:10px;overflow:auto}
 #historyInner{background:#111;padding:10px;border-radius:10px;max-width:700px;margin:auto;margin-top:30px}
 .history-item{padding:6px;margin:4px 0;background:#222;border-radius:6px;display:flex;justify-content:space-between}
+
+/* === mobile copy-paste fix === */
+.CodeMirror{
+  -webkit-user-modify: read-write-plaintext-only;
+  user-select:text;
+}
+.cm-fat-cursor { caret-color:white; }
 </style>
 </head>
 
 <body>
 <div class="app" id="editorArea">
-<h2>Playground v17 — HTML / CSS / JS</h2>
+<h2>Playground v18 — HTML / CSS / JS</h2>
 
 <div class="file-tabs">
 <div class="file-btn active" onclick="switchFile('index.html')">index.html</div>
@@ -76,21 +84,27 @@ button{flex:1;padding:10px;border:none;border-radius:8px;background:var(--accent
 <div id="historyBox"><div id="historyInner"></div></div>
 
 <script>
-let files=JSON.parse(localStorage.getItem("files_v17")||"{}")
-let hist=JSON.parse(localStorage.getItem("hist_v17")||"[]")
+let files=JSON.parse(localStorage.getItem("files_v18")||"{}")
+let hist=JSON.parse(localStorage.getItem("hist_v18")||"[]")
 
 if(Object.keys(files).length===0){
 files={"index.html":"<h1>Hello!</h1>","style.css":"body{background:white;}","script.js":"console.log('JS OK')"}
 }
 
-function save(){localStorage.setItem("files_v17",JSON.stringify(files))}
-function saveHist(){localStorage.setItem("hist_v17",JSON.stringify(hist))}
+function save(){localStorage.setItem("files_v18",JSON.stringify(files))}
+function saveHist(){localStorage.setItem("hist_v18",JSON.stringify(hist))}
 
 let current="index.html"
 let cm
 
 function setup(){
-cm=CodeMirror.fromTextArea(document.getElementById("editor"),{mode:"xml",theme:"dracula",lineNumbers:true})
+cm=CodeMirror.fromTextArea(document.getElementById("editor"),{
+  mode:"xml",
+  theme:"dracula",
+  lineNumbers:true,
+  lineWrapping:true,
+  inputStyle:"textarea"   /* <-- MOST IMPORTANT FIX */
+})
 cm.setValue(files[current])
 cm.on("change",()=>{files[current]=cm.getValue();save()})
 }
@@ -104,9 +118,7 @@ document.querySelectorAll(".file-btn").forEach(b=>b.classList.remove("active"))
 ;[...document.querySelectorAll(".file-btn")].find(b=>b.innerText.includes(n)).classList.add("active")
 }
 
-function showPanel(id){
-document.getElementById("jsPanel").classList.add("active")
-}
+function showPanel(id){document.getElementById("jsPanel").classList.add("active")}
 
 function runJS(){
 let p=document.getElementById("jsPanel");p.innerHTML=""
@@ -117,7 +129,7 @@ hist.push({t:new Date().toLocaleString(),snap:JSON.stringify(files)});saveHist()
 
 function showPreviewFull(){
 let f=document.getElementById("previewFrame")
-f.srcdoc=`<html><head><style>${files["style.css"]}</style></head><body>${files["index.html"]}<script>try{${files["script.js"]}}catch(e){document.body.innerHTML+='<pre style='color:red'>'+e+'</pre>'}<\/script></body></html>`
+f.srcdoc=`<html><head><style>${files["style.css"]}</style></head><body>${files["index.html"]}<script>try{${files["script.js"]}}catch(e){document.body.innerHTML+='<pre style="color:red">'+e+'</pre>'}<\/script></body></html>`
 document.getElementById("previewArea").style.display="block"
 document.getElementById("editorArea").style.display="none"
 }
