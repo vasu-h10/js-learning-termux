@@ -1,244 +1,223 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Playground v20 — Beginner + Theme</title>
+<title>Playground v18 — Beginner Editor</title>
 
-<!-- Prism Syntax Highlight -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-twilight.min.css" id="theme-dark">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" id="theme-light" disabled>
+<!-- Prism for syntax highlight -->
+<link id="prismTheme" rel="stylesheet"
+ href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
+<link rel="stylesheet"
+ href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <style>
 :root {
-  --accent:#2563eb;
-}
-body {
-  margin:0;
-  font-family:monospace;
-  padding:10px;
-  display:flex;
-  justify-content:center;
-  min-height:100vh;
-}
-body[data-theme="dark"] {
-  background:#020617;
-  color:#e5e7eb;
-}
-body[data-theme="light"] {
-  background:#f4f4f4;
-  color:#222;
-}
-.app {
-  width:100%;
-  max-width:900px;
-  background:rgba(0,0,0,.2);
-  border-radius:12px;
-  padding:12px;
-}
-.file-tabs {
-  display:flex;gap:6px;overflow-x:auto;margin-bottom:8px;
-}
-.file-btn {
-  padding:8px 12px;
-  background:#334155;
-  border-radius:8px;
-  cursor:pointer;
-  white-space:nowrap;
-}
-.file-btn.active { background:var(--accent); }
-
-textarea {
-  width:100%;
-  height:260px;
-  border-radius:8px;
-  padding:10px;
-  font-size:14px;
-  outline:none;
-  border:1px solid #475569;
-  background:transparent;
-  color:inherit;
-  caret-color:var(--accent);
-  resize:none;
+  --bg:#020617; --panel:#020617; --text:#e5e7eb;
+  --accent:#2563eb; --console-bg:#111;
 }
 
-pre { margin:0;padding:0; }
-
-.buttons {
-  display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;
-}
-button {
-  flex:1;
-  padding:10px;
-  border:none;
-  border-radius:8px;
-  background:var(--accent);
-  color:white;
-  cursor:pointer;
+/* LIGHT MODE */
+body.light {
+  --bg:#f1f5f9; --panel:#ffffff; --text:#0f172a;
+  --console-bg:#e2e8f0;
 }
 
-.panel {
-  margin-top:8px;
-  background:#000;
-  padding:12px;
-  border-radius:10px;
-  height:200px;
-  overflow-y:auto;
-  font-size:14px;
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family: monospace; display:flex; justify-content:center;
+  padding:10px; min-height:100vh;
 }
-.log{color:#fff;}
-.error{color:red;}
 
-#previewArea {
+.app{
+  width:100%; max-width:900px; background:var(--panel);
+  padding:12px; border-radius:12px;
+}
+
+h2{margin-top:0;color:var(--accent)}
+
+.file-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:8px}
+.file-btn{
+  padding:8px 12px;background:#334155;color:white;
+  border-radius:8px;cursor:pointer;flex-shrink:0;
+}
+.file-btn.active{background:var(--accent)}
+
+#editorBox{
+  background:#0f172a;color:#22c55e;border-radius:8px;
+  padding:10px;min-height:300px;overflow-y:auto;
+  white-space:pre; font-size:15px;
+}
+
+/* theme change for editor */
+body.light #editorBox{
+  background:#e2e8f0;color:#111;
+}
+
+.buttons{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+button{
+  flex:1;padding:10px;border:none;border-radius:8px;
+  background:var(--accent);color:white;cursor:pointer
+}
+
+.panel-tabs{display:flex;gap:6px;margin-top:10px}
+.panel-btn{
+  padding:6px 10px;background:#334155;border-radius:6px;
+  cursor:pointer;color:white
+}
+.panel-btn.active{background:var(--accent)}
+
+.panel{
+  background:var(--console-bg);margin-top:8px;padding:12px;
+  border-radius:10px;height:200px;overflow-y:auto;font-size:14px;
+  display:none;white-space:pre-wrap;
+}
+.panel.active{display:block}
+
+#errorText{color:red}
+.log{color:var(--text)}
+
+#previewArea{
   display:none;position:fixed;top:0;left:0;
-  width:100%;height:100%;background:white;z-index:9999;
+  width:100vw;height:100vh;background:white;z-index:9999;
 }
-#previewFrame {
-  width:100%;height:calc(100vh - 50px);border:none;
-}
-#consoleFull {
-  display:none;position:fixed;top:0;left:0;
-  width:100%;height:100%;background:#000;color:#fff;z-index:9999;
-}
-#consoleFullContent { white-space:pre-wrap; }
+#previewFrame{width:100%;height:calc(100vh - 50px);border:none}
 
-#themeBtn {
-  position:absolute;top:10px;right:10px;
-  padding:6px 12px;border-radius:6px;
-  background:var(--accent);color:white;
+#consoleFull{
+  display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+  background:black;color:white;z-index:9999;overflow:auto;
+}
+#consoleFullContent{white-space:pre-wrap}
+
+#historyBox{
+  display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+  background:#000a;z-index:9999;padding:10px;overflow:auto;
+}
+#historyInner{
+  background:#111;padding:10px;border-radius:10px;
+  max-width:700px;margin:auto;margin-top:30px;color:white;
+}
+.history-item{
+  padding:6px;margin:4px 0;background:#222;border-radius:6px;
+  display:flex;justify-content:space-between;color:white;
 }
 </style>
 </head>
 
 <body>
 
-<button id="themeBtn" onclick="toggleTheme()">🌗 Theme</button>
-
 <div class="app" id="editorArea">
-<h2>Playground v20 — HTML / CSS / JS</h2>
+<h2>Playground v18 — HTML / CSS / JS</h2>
 
+<!-- fixed beginner files -->
 <div class="file-tabs">
-<div class="file-btn active" onclick="switchFile('index.html')">index.html</div>
-<div class="file-btn" onclick="switchFile('style.css')">style.css</div>
-<div class="file-btn" onclick="switchFile('script.js')">script.js</div>
+  <div class="file-btn active" onclick="switchFile('index.html')">index.html</div>
+  <div class="file-btn" onclick="switchFile('style.css')">style.css</div>
+  <div class="file-btn" onclick="switchFile('script.js')">script.js</div>
 </div>
 
-<textarea id="editor"></textarea>
-<pre><code id="highlighted" class="language-markup"></code></pre>
+<!-- editor textarea -->
+<textarea id="rawEditor" style="display:none"></textarea>
+<div id="editorBox" contenteditable="true"></div>
 
 <div class="buttons">
-<button onclick="runJS()">▶ Run JS</button>
-<button onclick="showPreviewFull()">🌐 Preview</button>
-<button onclick="showConsoleFull()">🖥 Console</button>
-<button onclick="openHistory()">📜 History</button>
-<button onclick="downloadZip()">📦 Download</button>
+  <button onclick="toggleTheme()">🌓 Theme</button>
+  <button onclick="runJS()">▶ Run JS</button>
+  <button onclick="showPreviewFull()">🌐 Preview</button>
+  <button onclick="showConsoleFull()">🖥 Console</button>
+  <button onclick="openHistory()">📜 History</button>
+  <button onclick="downloadZip()">📦 Download ZIP</button>
 </div>
 
-<div id="jsPanel" class="panel"></div>
+<div class="panel-tabs">
+  <div class="panel-btn active" onclick="showJSPanel()">JS console</div>
 </div>
 
+<div id="jsPanel" class="panel active"></div>
+</div>
+
+
+<!-- Full preview -->
 <div id="previewArea">
-<button onclick="hidePreview()" style="width:100%;">🔙 Back</button>
-<iframe id="previewFrame"></iframe>
+  <button onclick="hidePreview()" style="width:100%;padding:10px;">🔙 Back</button>
+  <iframe id="previewFrame"></iframe>
 </div>
 
+<!-- Full console -->
 <div id="consoleFull">
-<button onclick="hideConsoleFull()">🔙 Back</button>
-<pre id="consoleFullContent"></pre>
+  <button onclick="hideConsoleFull()" style="width:100%;padding:10px;">🔙 Back</button>
+  <pre id="consoleFullContent"></pre>
 </div>
+
+<!-- History -->
+<div id="historyBox"><div id="historyInner"></div></div>
 
 <script>
-let files = JSON.parse(localStorage.getItem("files_v20")||"{}");
-let hist  = JSON.parse(localStorage.getItem("hist_v20")||"[]");
+/* ---- storage ---- */
+let files = JSON.parse(localStorage.getItem("files_v18") || "{}");
+let historyList = JSON.parse(localStorage.getItem("hist_v18") || "[]");
 
 if(Object.keys(files).length===0){
   files={
-    "index.html":"<h1>Hello!</h1>",
-    "style.css":"body{background:white;}",
-    "script.js":"console.log('JS OK')"
+    "index.html":"<h1>Hello World!</h1>",
+    "style.css":"body{background:white;font-size:22px;}",
+    "script.js":"console.log('Learning JavaScript!')"
   };
 }
+function saveFiles(){localStorage.setItem("files_v18",JSON.stringify(files))}
+function saveHistory(){localStorage.setItem("hist_v18",JSON.stringify(historyList))}
 
 let current="index.html";
-let editor=document.getElementById("editor");
-let highlighted=document.getElementById("highlighted");
+const box=document.getElementById("editorBox");
 
-function save(){localStorage.setItem("files_v20",JSON.stringify(files))}
-function saveHist(){localStorage.setItem("hist_v20",JSON.stringify(hist))}
-
-/* update highlight */
-function refreshHighlight(){
-  highlighted.textContent = files[current];
-  highlighted.className="language-" +
-    (current.endsWith(".js")?"javascript":current.endsWith(".css")?"css":"markup");
-  Prism.highlightElement(highlighted);
+/* ---- load file into editor ---- */
+function loadFile(){
+  box.innerText = files[current];
+  Prism.highlightElement(box);
 }
+loadFile();
 
-/* setup */
-editor.value = files[current];
-editor.addEventListener("input", ()=>{
-  files[current]=editor.value;
-  save();
-  refreshHighlight();
-});
-refreshHighlight();
-
-/* theme */
-function toggleTheme(){
-  let b=document.documentElement;
-  let d=document.getElementById("theme-dark");
-  let l=document.getElementById("theme-light");
-
-  if(b.getAttribute("data-theme")==="dark"){
-    b.setAttribute("data-theme","light");
-    d.disabled=true; l.disabled=false;
-  } else {
-    b.setAttribute("data-theme","dark");
-    d.disabled=false; l.disabled=true;
-  }
-  localStorage.setItem("theme_v20",b.getAttribute("data-theme"));
-}
-
-let savedTheme=localStorage.getItem("theme_v20");
-if(savedTheme){
-  document.documentElement.setAttribute("data-theme",savedTheme);
-  if(savedTheme==="light"){themeBtn.click();}
-}
-
-/* file switch */
-function switchFile(n){
-  files[current]=editor.value;save();
-  current=n;
-  editor.value=files[n];
-  refreshHighlight();
+/* ---- switch files ---- */
+function switchFile(name){
+  files[current]=box.innerText;
+  saveFiles();
+  current=name;
+  loadFile();
   document.querySelectorAll(".file-btn").forEach(b=>b.classList.remove("active"));
-  [...document.querySelectorAll(".file-btn")].find(b=>b.innerText.includes(n)).classList.add("active");
+  [...document.querySelectorAll(".file-btn")].find(b=>b.innerText.includes(name)).classList.add("active");
 }
 
-/* run JS */
+/* ---- JS console ---- */
+function showJSPanel(){
+  document.getElementById("jsPanel").classList.add("active");
+}
+
+/* ---- Run JS ---- */
 function runJS(){
-  let p=document.getElementById("jsPanel");p.innerHTML="";
+  historyList.push({t:new Date().toLocaleString(),snap:JSON.stringify(files)});
+  saveHistory();
+  const panel=document.getElementById("jsPanel");
+  panel.innerHTML="";
   try{
-    let r=eval(files["script.js"]);
-    if(r!==undefined)p.innerHTML+=`<div class="log">${r}</div>`;
+    const out=eval(files["script.js"]);
+    if(out!==undefined) panel.innerHTML+=`<div class="log">${out}</div>`;
   }catch(e){
-    p.innerHTML=`<div class="error">${e.message}</div>`;
+    panel.innerHTML+=`<div class="log" style="color:red">${e.message}</div>`;
   }
-  hist.push({t:new Date().toLocaleString(), snap:JSON.stringify(files)});saveHist();
 }
 
-/* preview */
+/* ---- Preview ---- */
 function showPreviewFull(){
-  let f=document.getElementById("previewFrame");
-  f.srcdoc=`<html><head><style>${files["style.css"]}</style></head>
-  <body>${files["index.html"]}
-  <script>try{${files["script.js"]}}catch(e){document.body.innerHTML+='<pre style="color:red">'+e+'</pre>'}<\/script>
-  </body></html>`;
+  const f=document.getElementById("previewFrame");
+  f.srcdoc = `
+    <html>
+    <head><style>${files["style.css"]}</style></head>
+    <body>${files["index.html"]}
+    <script>try{${files["script.js"]}}catch(e){document.body.innerHTML+='<pre style="color:red">'+e+'</pre>'}<\/script>
+    </body></html>`;
   document.getElementById("previewArea").style.display="block";
   document.getElementById("editorArea").style.display="none";
 }
@@ -247,34 +226,60 @@ function hidePreview(){
   document.getElementById("editorArea").style.display="block";
 }
 
-/* full console */
+/* ---- Full console ---- */
 function showConsoleFull(){
-  document.getElementById("consoleFullContent").innerText=document.getElementById("jsPanel").innerText;
+  document.getElementById("consoleFullContent").innerText =
+    document.getElementById("jsPanel").innerText;
   document.getElementById("consoleFull").style.display="block";
 }
 function hideConsoleFull(){
   document.getElementById("consoleFull").style.display="none";
 }
 
-/* history */
+/* ---- History ---- */
 function openHistory(){
-  let div=document.getElementById("jsPanel");
-  div.innerHTML="--- HISTORY ---<br>";
-  hist.slice().reverse().forEach(h=>{
-    div.innerHTML+=`${h.t}<br>`;
+  const h=document.getElementById("historyInner");
+  h.innerHTML="<h3>History</h3>";
+  historyList.forEach((item,i)=>{
+    h.innerHTML+=`
+    <div class="history-item">
+      <span>${item.t}</span>
+      <button onclick="restoreHistory(${i})">Restore</button>
+    </div>`;
   });
+  document.getElementById("historyBox").style.display="block";
 }
+function restoreHistory(i){
+  files=JSON.parse(historyList[i].snap);
+  saveFiles();
+  loadFile();
+  alert("Restored!");
+}
+document.getElementById("historyBox").onclick=e=>{
+  if(e.target.id==="historyBox")e.target.style.display="none";
+};
 
-/* download */
+/* ---- Download ZIP ---- */
 function downloadZip(){
-  let z=new JSZip();
-  Object.keys(files).forEach(n=>z.file(n,files[n]));
-  z.generateAsync({type:"blob"}).then(c=>{
-    let a=document.createElement("a");
-    a.href=URL.createObjectURL(c);
+  let zip=new JSZip();
+  Object.keys(files).forEach(n=>zip.file(n,files[n]));
+  zip.generateAsync({type:"blob"}).then(content=>{
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(content);
     a.download="project.zip";
     a.click();
   });
+}
+
+/* ---- Theme ---- */
+function toggleTheme(){
+  const body=document.body;
+  const light=body.classList.toggle("light");
+  document.getElementById("prismTheme").href =
+    light
+    ? "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css"
+    : "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css";
+  loadFile();
 }
 </script>
 </body>
