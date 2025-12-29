@@ -1,130 +1,290 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1.0" />
-<title>JS Playground v25 — Debug Practice</title>
+  <meta charset="UTF-8" />
+  <title>JS Playground</title>
 
-<style>
-:root {
-  --bg:#020617;
-  --panel:#0f172a;
-  --text:#e5e7eb;
-  --accent:#2563eb;
-  --console-bg:#000;
-}
-body {
-  margin:0;background:var(--bg);color:var(--text);
-  font-family:monospace;display:flex;justify-content:center;
-  padding:10px;min-height:100vh;
-}
-.app {width:100%;max-width:900px;background:var(--panel);
-  padding:12px;border-radius:12px;}
-h2{margin:0 0 10px;color:var(--accent);font-size:20px;text-align:center}
+  <style>
+    :root {
+      --bg: #020617;
+      --panel: #020617;
+      --text: #e5e7eb;
+      --editor: #020617;
+      --code: #22c55e;
+      --accent: #2563eb;
+    }
 
-/* editor box */
-#editor {
-  width:100%;height:300px;background:#000;color:#22c55e;
-  padding:12px;border-radius:10px;resize:none;font-size:16px;
-  line-height:1.6;outline:none;border:none;
-}
+    body.light {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --text: #0f172a;
+      --editor: #f1f5f9;
+      --code: #0f172a;
+      --accent: #2563eb;
+    }
 
-/* buttons */
-.buttons {display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-button {
-  flex:1;padding:12px;font-size:16px;border:none;
-  border-radius:8px;background:var(--accent);color:white;
-  cursor:pointer;
-}
+    * { box-sizing: border-box; }
 
-/* console */
-#console {
-  background:var(--console-bg);margin-top:12px;padding:12px;
-  height:220px;border-radius:10px;overflow-y:auto;
-  font-size:15px;white-space:pre-wrap;
-}
-.log{color:#22c55e}
-.error{color:#ef4444;font-weight:bold}
-</style>
+    /* 🔵 Hide system cursor */
+    body, textarea, button, .console {
+      cursor: none;
+      touch-action: none; /* allows touch tracking */
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: monospace;
+      color: var(--text);
+      padding: 16px;
+    }
+
+    /* 🔵 Custom cursor graphic */
+    #cursor {
+      width: 24px;
+      height: 24px;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      background: url('https://cdn-icons-png.flaticon.com/512/32/32195.png') no-repeat center/cover;
+      transform: translate(-4px, -4px);
+    }
+
+    .app {
+      width: 100%;
+      max-width: 900px;
+      background: var(--panel);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 20px;
+      color: var(--accent);
+      margin: 0;
+    }
+
+    header button {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .tab {
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #334155;
+      color: white;
+      font-size: 14px;
+    }
+
+    .tab.active {
+      background: var(--accent);
+    }
+
+    .editor-wrapper {
+      display: flex;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .lines {
+      padding: 12px 6px;
+      text-align: right;
+      color: #64748b;
+      user-select: none;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    textarea {
+      flex: 1;
+      height: 260px;
+      background: var(--editor);
+      color: var(--code);
+      border: none;
+      padding: 12px;
+      font-size: 15px;
+      line-height: 1.6;
+      resize: none;
+      outline: none;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .buttons button {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .console {
+      background: black;
+      padding: 12px;
+      border-radius: 10px;
+      height: 220px;
+      overflow-y: auto;
+      font-size: 14px;
+    }
+
+    .log { color: var(--text); }
+    .error { color: #ef4444; }
+  </style>
 </head>
 
 <body>
-<div class="app">
-  <h2>JS Playground v25 — Debugging Mode</h2>
+  <!-- 🔵 Custom cursor element -->
+  <div id="cursor"></div>
 
-  <textarea id="editor" spellcheck="false">
-// Try errors:
-// consol.log("test")
-// let x = ; 
-let a = 5
-let b = 7
-console.log("Result:", a + b)
-  </textarea>
+  <div class="app">
+    <header>
+      <h1>JS Playground</h1>
+      <button onclick="toggleTheme()">🌙 / ☀️</button>
+    </header>
 
-  <div class="buttons">
-    <button onclick="runJS()">▶ Run</button>
-    <button onclick="clearConsole()">🧹 Clear</button>
-    <button onclick="copyCode()">📋 Copy</button>
-    <button onclick="downloadFile()">⬇ Save</button>
+    <div class="tabs">
+      <div class="tab active" onclick="switchFile(0)">main.js</div>
+      <div class="tab" onclick="switchFile(1)">test.js</div>
+    </div>
+
+    <div class="editor-wrapper">
+      <div id="lines" class="lines">1</div>
+      <textarea id="editor"></textarea>
+    </div>
+
+    <div class="buttons">
+      <button onclick="runCode()">▶ Run</button>
+      <button onclick="clearConsole()">🧹 Clear</button>
+      <button onclick="download()">⬇ Export</button>
+    </div>
+
+    <div id="console" class="console"></div>
   </div>
 
-  <div id="console"></div>
-</div>
-
 <script>
-const editor = document.getElementById("editor");
-const consoleBox = document.getElementById("console");
+  /* 🔵 Cursor follow with mouse */
+  const cursor = document.getElementById("cursor");
+  document.addEventListener("mousemove", (e) => {
+    cursor.style.left = e.clientX + "px";
+    cursor.style.top = e.clientY + "px";
+  });
 
-/* clear output */
-function clearConsole(){ consoleBox.innerHTML=""; }
+  /* 🔵 Cursor follow with touch */
+  document.addEventListener("touchmove", (e) => {
+    const t = e.touches[0];
+    cursor.style.left = t.clientX + "px";
+    cursor.style.top = t.clientY + "px";
+  });
 
-/* copy */
-function copyCode(){
-  navigator.clipboard.writeText(editor.value);
-  alert("Copied!");
-}
+  const editor = document.getElementById("editor");
+  const consoleBox = document.getElementById("console");
+  const lines = document.getElementById("lines");
+  const tabs = document.querySelectorAll(".tab");
 
-/* download */
-function downloadFile(){
-  const blob=new Blob([editor.value],{type:"text/javascript"});
-  const link=document.createElement("a");
-  link.href=URL.createObjectURL(blob);
-  link.download="script.js";
-  link.click();
-}
+  let files = [
+    localStorage.getItem("file0") || "let x = 10;\nlet y = 5;\nconsole.log(x + y);",
+    localStorage.getItem("file1") || "console.log('Hello from test.js');"
+  ];
 
-/* run + detect errors with line */
-function runJS(){
-  clearConsole();
-  const code = editor.value;
+  let current = 0;
 
-  /* get lines for better error info */
-  const lines = code.split("\n");
-
-  try {
-    let output = eval(code);
-    if(output!==undefined){
-      consoleBox.innerHTML += `<div class="log">${output}</div>`;
-    }
-  } catch (err) {
-    let msg = err.message;
-    let type = err.name;
-
-    /* find line number if available */
-    let match = msg.match(/<anonymous>:(\d+):/);
-    let line = match ? parseInt(match[1]) : null;
-
-    consoleBox.innerHTML += `<div class="error">
-      ❌ <b>${type}</b>: ${msg}
-      ${line?`<br>➡ Line: ${line}<br><br><code>${lines[line-1]}</code>`:""}
-    </div>`;
+  function updateLines() {
+    lines.innerHTML = Array.from(
+      { length: editor.value.split("\n").length },
+      (_, i) => i + 1
+    ).join("<br>");
   }
-}
 
-/* Ctrl + Enter to run */
-document.addEventListener("keydown",e=>{
-  if((e.ctrlKey||e.metaKey)&&e.key==="Enter") runJS();
-});
+  function switchFile(i) {
+    files[current] = editor.value;
+    localStorage.setItem("file" + current, files[current]);
+
+    current = i;
+    editor.value = files[i];
+    tabs.forEach(t => t.classList.remove("active"));
+    tabs[i].classList.add("active");
+    updateLines();
+  }
+
+  editor.value = files[0];
+  updateLines();
+
+  editor.addEventListener("input", () => {
+    updateLines();
+    localStorage.setItem("file" + current, editor.value);
+  });
+
+  const originalLog = console.log;
+  console.log = (...args) => {
+    originalLog(...args);
+    consoleBox.innerHTML += `<div class="log">&gt; ${args.join(" ")}</div>`;
+  };
+
+  function clearConsole() {
+    consoleBox.innerHTML = "";
+  }
+
+  function runCode() {
+    clearConsole();
+    try {
+      const result = eval(editor.value);
+      if (result !== undefined) {
+        consoleBox.innerHTML += `<div class="log">&gt; ${result}</div>`;
+      }
+    } catch (e) {
+      consoleBox.innerHTML += `<div class="error">Error: ${e.message}</div>`;
+    }
+  }
+
+  document.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      runCode();
+    }
+  });
+
+  function toggleTheme() {
+    document.body.classList.toggle("light");
+  }
+
+  function download() {
+    const blob = new Blob([editor.value], { type: "text/javascript" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = tabs[current].innerText;
+    a.click();
+  }
 </script>
 </body>
 </html>
